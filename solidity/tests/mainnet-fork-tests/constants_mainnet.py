@@ -25,7 +25,7 @@ GENERIC_NFT_DATA = ["https://test",
                     "194F55B6FA5CD48B9DD2CACDD9598792602A4EDCB72B9B7CB410124CCFD79078"
                     ]
 SPECIAL_NFT_DATA = ["https://test",
-                    "https://test_meta"
+                    "https://test_meta",
                     "294F55A6FA5CD48B9DD2CACDD9598792602A4EDCB72B9B7CB410124CCFD79078",
                     "194F55A6FA5CD48B9DD2CACDD9598792602A4EDCB72B9B7CB410124CCFD79078"
                     ]

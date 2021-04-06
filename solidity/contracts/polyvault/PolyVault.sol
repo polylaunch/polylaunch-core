@@ -9,6 +9,7 @@ import "../../interfaces/IVault.sol";
 import "../../interfaces/ILendingPool.sol";
 import "../../interfaces/IPolyVaultRegistry.sol";
 import {LaunchLogger} from "../launch/LaunchLogger.sol";
+import "../system/PolylaunchConstants.sol";
 
 /**
  * @title PolyVault associated with a particular Polylaunch contract,
@@ -125,7 +126,7 @@ contract PolyVault{
         selectedVaultId = 0;
         selectedVaultProvider = 0;
         if (newBalance > remainingBalance) {
-            uint256 excess = (newBalance.sub(remainingBalance)).div(2);
+            uint256 excess = (newBalance.sub(remainingBalance)).div(PolylaunchConstants.getExcess());
             _USD.safeTransfer(_system, excess);
         }
         LaunchLogger(_system).logVaultExited(

@@ -1,0 +1,8 @@
+// Voting Parameters
+uint256 public constant VOTING_DELAY = 1; // 1 block
+uint256 public constant VOTING_PERIOD = 40_320; // ~7 days in blocks (assuming 15s blocks)
+
+// Timelock parameters
+uint256 public constant EXECUTION_DELAY = 2 days; 
+uint256 public constant GRACE_PERIOD = 14 days;
+

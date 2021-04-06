@@ -20,16 +20,24 @@ $ cd solidity
 $ brownie test tests/mainnet-fork-tests --network mainnet-fork -s
 ```
 
-##Polylaunch Protocol Flowcharts
+## Polylaunch Protocol Flowcharts
 
 Overall Polylaunch Protocol - 5th April 2021
+
+
 ![Main Contract Flow](./docs/contract-flowcharts/main.png)
 
 Figure A - Prelaunch interactions - 5th April 2021
+
+
 ![Figure A](./docs/contract-flowcharts/figure-a-prelaunch.png)
 
 Figure B - Venture Bond and Market interactions - 5th April 2021
+
+
 ![Figure B](./docs/contract-flowcharts/figure-b-venture-bond-interactions.png)
 
 Figure C - Polylaunch Governance - 5th April 2021
+
+
 ![Figure C](./docs/contract-flowcharts/figure-c-governance.png)

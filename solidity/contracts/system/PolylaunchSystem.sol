@@ -3,6 +3,7 @@ pragma solidity 0.7.4;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 
 import "../launch/LaunchFactory.sol";
 import "../launch/BasicLaunch.sol";
@@ -27,6 +28,8 @@ import {LaunchLogger} from "../launch/LaunchLogger.sol";
  */
 
 contract PolylaunchSystem is Ownable, LaunchLogger {
+    using SafeERC20 for IERC20;
+    
     event PolylaunchSystemLaunched(
         address factoryAddress,
         address systemAddress,
@@ -101,6 +104,26 @@ contract PolylaunchSystem is Ownable, LaunchLogger {
             _vaultId
         );
     }
+
+    /*
+     * @notice Collect balance from this contract
+     * @param _tokens Tokens to collect
+     * @param _payee Recipients of the collected balance
+     * @dev only the Owner can call this function
+     */
+     function withdraw(IERC20[] calldata _tokens, address payable _payee) external onlyOwner {
+         for (uint256 i=0; i < _tokens.length; i++) {
+             IERC20 token = _tokens[i];
+             uint256 tokenBalance = token.balanceOf(address(this));
+             if (tokenBalance > 0) {
+                 token.safeTransfer(_payee, tokenBalance);
+             }
+         }
+         if (address(this).balance > 0) {
+             _payee.transfer(address(this).balance);
+         }
+     }
+
 
 
 }

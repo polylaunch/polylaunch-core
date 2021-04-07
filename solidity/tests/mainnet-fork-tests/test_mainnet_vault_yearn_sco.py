@@ -51,7 +51,11 @@ def test_deposit_to_all_funds_withdrawn(successful_launch, accounts, ydai, gen_l
     print(usd_contract.balanceOf(accounts[0]))
     with brownie.reverts("There are no funds to withdraw"):
         launch_contract.launcherTap({"from": accounts[0]})
-
+    init_sys_owner_balance = usd_contract.balanceOf(accounts[0])
+    deployed_factory[1].withdraw([usd_contract], accounts[0], {"from": accounts[0]})
+    after_sys_owner_balance = usd_contract.balanceOf(accounts[0])
+    assert init_sys_owner_balance < after_sys_owner_balance
+    assert usd_contract.balanceOf(deployed_factory[1]) == 0
 
 '''
 Deposit scenarios

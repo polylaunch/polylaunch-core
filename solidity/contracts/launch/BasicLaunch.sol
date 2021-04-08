@@ -22,7 +22,7 @@ import {LaunchVault} from "./LaunchVault.sol";
 /**
  * @author PolyLaunch Protocol
  * @title Basic launch
- * @notice A PolyLaunch DAICO launch contract following an IBCO/Dynamic swap pool mechanism
+ * @notice A PolyLaunch DAICO launch contract following a fixed price mechanism
  * @dev should add a sweeper function to withdraw tokens accidentally sent into the contract
  */
 contract BasicLaunch is PolyVault, ReentrancyGuard {
@@ -69,17 +69,6 @@ contract BasicLaunch is PolyVault, ReentrancyGuard {
         require(
             msg.sender == self.governor,
             "Caller must be governor"
-        );
-        _;
-    }
-
-    /**
-     * @notice modifier to check that configured system is making a call
-     */
-    modifier onlySystem() {
-        require(
-            msg.sender == self.polylaunchSystem,
-            "Caller must be system"
         );
         _;
     }
@@ -137,6 +126,10 @@ contract BasicLaunch is PolyVault, ReentrancyGuard {
             launchInfo._minimumFunding > 0,
             "The minimum funding amount must be greater than 0"
         );
+        require(
+            (launchInfo._fundingCap.mul(launchInfo._fixedSwapRate)).div(1e18) 
+            <= launchInfo._totalForSale, "Insufficient tokens provided for the given swap rate"
+        );
 
         self.polylaunchSystem = _system;
         self.USD = _usd;
@@ -146,6 +139,8 @@ contract BasicLaunch is PolyVault, ReentrancyGuard {
         self.END = launchInfo._endDate;
         self.MINIMUM_FUNDING = launchInfo._minimumFunding;
         self.FUNDING_CAP = launchInfo._fundingCap;
+        self.INDIVIDUAL_FUNDING_CAP = launchInfo._individualFundingCap;
+        self.FIXED_SWAP_RATE = launchInfo._fixedSwapRate;
         self.fundRecipient = launchInfo._fundRecipient;
         self.launcherTapRate = launchInfo._initialLauncherTapRate;
         self.supporterTapRate = launchInfo._initialSupporterTapRate;
@@ -169,17 +164,20 @@ contract BasicLaunch is PolyVault, ReentrancyGuard {
      * @notice Allows an address to send in DAI to invest in the DAICO
      * @param amount the amount the address would like to invest
      */
-    function sendUSD(uint256 amount) external nonReentrant {
+    function sendUSD(uint256 amount) external{
         require(
             block.timestamp >= self.START,
-            "The offering has not started yet"
+            "Launch not started"
         );
-        require(block.timestamp < self.END, "The offering has already ended");
+        require(block.timestamp < self.END, "Launch has ended");
         require(
             self.USD.balanceOf(address(this)) < self.FUNDING_CAP,
-            "The offering has reached its funding cap"
+            "Launch has reached funding cap"
         );
-
+        require(
+            self.provided[msg.sender] + amount <= self.INDIVIDUAL_FUNDING_CAP,
+            "You have reached the individual funding cap"
+        );
         require(
             self.USD.transferFrom(msg.sender, address(this), amount),
             "Token transfer failed"
@@ -202,14 +200,21 @@ contract BasicLaunch is PolyVault, ReentrancyGuard {
     /**
      * @notice Launcher withdraws all tokens they provided if the minimum funding amount is not reached.
      */
-    function withdrawTokenAfterFailedLaunch() external onlyLauncher nonReentrant {
+    function withdrawTokenAfterFailedLaunch() external onlyLauncher{
         self.withdrawTokenAfterFailedLaunch();
+    }
+
+    /**
+     * @notice Launcher withdraws all tokens that were not sold during the sale window.
+     */
+    function withdrawUnsoldTokens() external onlyLauncher{
+        self.withdrawUnsoldTokens();
     }
 
     /**
      * @notice Launcher tap for receiving DAI that they are entitled to.
      */
-    function launcherTap() external onlyLauncher nonReentrant {
+    function launcherTap() external onlyLauncher {
         self.launcherTap();
     }
 
@@ -225,14 +230,14 @@ contract BasicLaunch is PolyVault, ReentrancyGuard {
      * @notice activate deposit into the PolyVault
      * @param vaultId the unique identifier of the vault the launcher wants to deploy funds to, refer to VaultRegistry
      */
-    function deposit(uint256 vaultId) external onlyLauncher nonReentrant {
+    function deposit(uint256 vaultId) external onlyLauncher{
         self.deposit(vaultId);
     }
 
     /**
      * @notice exit from a PolyVault
      */
-    function exitFromVault() external onlyLauncher nonReentrant {
+    function exitFromVault() external onlyLauncher{
         self.exitFromVault();
     }
 

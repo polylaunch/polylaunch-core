@@ -43,6 +43,10 @@ library LaunchUtils {
         uint256 MINIMUM_FUNDING;
         // total amount of funding a launch can receive
         uint256 FUNDING_CAP;
+        // individual funding cap for an address (DAI)
+        uint256 INDIVIDUAL_FUNDING_CAP;
+        // the rate to exchange dai to the token
+        uint256 FIXED_SWAP_RATE;
         // launcher tap rate (wei/sec)
         uint256 launcherTapRate;
         // supporter tap rate (wei/sec)

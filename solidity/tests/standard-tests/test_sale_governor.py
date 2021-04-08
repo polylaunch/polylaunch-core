@@ -276,7 +276,7 @@ def test_double_vote_same_NFT_reverts(launch_with_active_tap_increase_proposal, 
 
 
 def test_claim_refund_without_succeeded_proposal_fails(successful_launch, accounts):
-    with brownie.reverts("PolylaunchUtils::claimRefund: Launch is not in refund mode"):
+    with brownie.reverts("claimRefund: Launch is not in refund mode"):
         launch, _ = successful_launch
         launch.claimRefund(1, {"from": accounts[1]})
 

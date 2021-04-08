@@ -25,7 +25,7 @@ library LaunchGovernance {
     function initiateRefundMode(LaunchUtils.Data storage self) internal {
         require(
             self.isRefundMode == false,
-            "PolylaunchUtils::initiateRefundMode: Launch is already in refund mode"
+            "initiateRefundMode: Launch is in refund mode"
         );
         self.isRefundMode = true;
         if (self.yieldActivated){
@@ -47,11 +47,11 @@ library LaunchGovernance {
     {
         require(
             self.isRefundMode == true,
-            "PolylaunchUtils::claimRefund: Launch is not in refund mode"
+            "claimRefund: Launch is not in refund mode"
         );
         require(
             IERC721(self.ventureBondAddress).ownerOf(tokenId) == msg.sender,
-            "PolylaunchUtils::claimRefund: Sender does not own a venture bond with the given id"
+            "claimRefund: Sender not ventureBond owner"
         );
 
         uint256 totalSenderBalance =

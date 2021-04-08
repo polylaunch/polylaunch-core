@@ -19,6 +19,8 @@ def test_create_basic_launch(mint_dummy_token, deployed_factory, accounts):
             constants.INITIAL_DEV_TAP_RATE,
             constants.INITIAL_INV_TAP_RATE,
             constants.FUNDING_CAP,
+            constants.INDIVIDUAL_FUNDING_CAP,
+            constants.FIXED_SWAP_RATE,
             constants.NFT_NAME,
             constants.NFT_SYMBOL,
             constants.GENERIC_NFT_DATA
@@ -52,6 +54,8 @@ def test_create_basic_launch_fails_with_bad_nft_data(mint_dummy_token, deployed_
                     constants.INITIAL_DEV_TAP_RATE,
                     constants.INITIAL_INV_TAP_RATE,
                     constants.FUNDING_CAP,
+                    constants.INDIVIDUAL_FUNDING_CAP,
+                    constants.FIXED_SWAP_RATE,
                     constants.NFT_NAME,
                     constants.NFT_SYMBOL,
                     nftData
@@ -119,7 +123,7 @@ def test_dev_cannot_tap_after_failed_launch(failed_launch, accounts):
 
 def test_cannot_send_usd_after_launch(successful_launch, accounts):
     launch_contract, usd_contract = successful_launch
-    with brownie.reverts("The offering has already ended"):
+    with brownie.reverts("Launch has ended"):
         usd_contract.increaseAllowance(launch_contract, 1000, {"from": accounts[1]})
         launch_contract.sendUSD(1000, {"from": accounts[1]})
 
@@ -197,19 +201,19 @@ def test_investors_claim_nft_after_successful_launch(
             venture_bond_contract.tapRate(token_id, {"from": inv})
             == constants.INITIAL_INV_TAP_RATE
         )
-        assert round(int(venture_bond_contract.tappableBalance(
-            token_id, {"from": inv})), int(-13)) == round(int(((constants.AMOUNT_FOR_SALE) / len(investors))), int(-13))
-        print(venture_bond_contract.tappableBalance(token_id, {"from": inv}), constants.AMOUNT_FOR_SALE / len(investors))
-        print(venture_bond_contract.votingPower(token_id, {"from": inv}), constants.AMOUNT_FOR_SALE / len(investors))
-        assert round(int(venture_bond_contract.votingPower(
-            token_id, {"from": inv})), int(-13)) == round(int(((constants.AMOUNT_FOR_SALE) / len(investors))), int(-13))
+        assert (venture_bond_contract.tappableBalance(token_id, {"from": inv})
+            == (constants.INVESTMENT_AMOUNT*constants.FIXED_SWAP_RATE)/1e18)
+        print(venture_bond_contract.tappableBalance(token_id, {"from": inv}), (constants.INVESTMENT_AMOUNT*constants.FIXED_SWAP_RATE)/1e18)
+        print(venture_bond_contract.votingPower(token_id, {"from": inv}), (constants.INVESTMENT_AMOUNT*constants.FIXED_SWAP_RATE)/1e18)
+        assert (venture_bond_contract.votingPower(token_id, {"from": inv})
+            == (constants.INVESTMENT_AMOUNT*constants.FIXED_SWAP_RATE)/1e18)
 
 
 def test_fake_investor_fails_claims_nft_after_successful_launch(
     successful_launch, accounts
 ):
     launch_contract, usd_contract = successful_launch
-    with brownie.reverts("You did not contribute to this offering"):
+    with brownie.reverts("msg.sender not eligible"):
         launch_contract.claim({"from": accounts[0]})
 
 
@@ -277,17 +281,77 @@ def test_investors_tap_nft_after_long_time(successful_launch, accounts):
         tx_tap = launch_contract.supporterTap(token_id, {"from": inv})
 
         assert "SupporterFundsTapped" in tx_tap.events
-
+        print(token_contract.balanceOf(inv))
         new_tappable_balance = venture_bond_contract.tappableBalance(
             token_id, {"from": inv}
         )
         token_amount = tx_tap.events["SupporterFundsTapped"]["amount"]
         new_withdrawn = venture_bond_contract.lastWithdrawnTime(token_id, {"from": inv})
-
         assert token_contract.balanceOf(inv) == token_amount
         assert new_tappable_balance == old_tappable_balance - token_amount
         assert new_withdrawn > old_withdrawn
 
+# test sets up such that there are no left over tokens, if you wish to change this, this test may fail
+def test_launcher_withdraw_unsold_tokens_fails(successful_launch, accounts):
+    launch_contract, _ = successful_launch
+    with brownie.reverts("All tokens sold"):
+        tx = launch_contract.withdrawUnsoldTokens({"from": accounts[0]})
+        print(tx.events["UnsoldTokensWithdrawn"]["amount"]/1e18)
+
+# this test scenario will use the same parameters but will have one less investor meaning there are left over tokens to withdraw
+def test_launcher_withdraw_unsold_tokens_succeeds(running_launch, accounts, send_1000_usd_to_accounts):
+    tx = []
+    investors = accounts[1:9]
+
+    # wait for it to start
+    start_delta = constants.START_DATE - time.time()
+    brownie.chain.sleep(int(start_delta) + 1)
+
+    for account in investors:
+        send_1000_usd_to_accounts.increaseAllowance(
+            running_launch, 1000e18, {"from": account}
+        )
+        running_launch.sendUSD(1000e18, {"from": account})
+
+    brownie.chain.sleep(int(constants.END_DATE - constants.START_DATE) + 1)
+
+    launch_contract = running_launch
+    usd_contract = send_1000_usd_to_accounts
+    venture_bond_address = launch_contract.launchVentureBondAddress({"from": accounts[0]})
+    venture_bond_contract = brownie.VentureBond.at(venture_bond_address)
+    token_for_launch = launch_contract.tokenForLaunch({"from": accounts[1]})
+    token_contract = brownie.GovernableERC20.at(token_for_launch)
+    brownie.chain.sleep(100000000)
+    withdraw = launch_contract.withdrawUnsoldTokens({"from": accounts[0]})
+    unsoldTokens = withdraw.events["UnsoldTokensWithdrawn"]["amount"]
+    assert unsoldTokens == (1000e18*constants.FIXED_SWAP_RATE)/1e18
+    print(unsoldTokens)
+    for inv in investors:
+        tx.append(launch_contract.claim({"from": inv}))
+    brownie.chain.sleep(100000000)
+    
+    for n, inv in enumerate(investors):
+        for trans in tx:
+            if trans.events["TokenMinted"]["_owner"] == inv:
+                token_id = trans.events["TokenMinted"]["_tokenId"]
+
+        old_tappable_balance = venture_bond_contract.tappableBalance(
+            token_id, {"from": inv}
+        )
+        old_withdrawn = venture_bond_contract.lastWithdrawnTime(token_id, {"from": inv})
+        assert venture_bond_contract.ownerOf(token_id) == inv
+        tx_tap = launch_contract.supporterTap(token_id, {"from": inv})
+
+        assert "SupporterFundsTapped" in tx_tap.events
+        print(token_contract.balanceOf(inv))
+        new_tappable_balance = venture_bond_contract.tappableBalance(
+            token_id, {"from": inv}
+        )
+        token_amount = tx_tap.events["SupporterFundsTapped"]["amount"]
+        new_withdrawn = venture_bond_contract.lastWithdrawnTime(token_id, {"from": inv})
+        assert token_contract.balanceOf(inv) == token_amount
+        assert new_tappable_balance == old_tappable_balance - token_amount
+        assert new_withdrawn > old_withdrawn
 
 def test_investors_tap_nft_after_failed_launch(
     running_launch, accounts, send_1000_usd_to_accounts
@@ -304,7 +368,7 @@ def test_investors_tap_nft_after_failed_launch(
         running_launch.sendUSD(constants.LOW_INPUT_AMOUNT, {"from": account})
     brownie.chain.sleep(int(constants.END_DATE - constants.START_DATE) + 1)
 
-    with brownie.reverts("The launch was unsuccessful."):
+    with brownie.reverts("Launch Unsuccessful."):
         launch_contract.supporterTap(0, {"from": accounts[1]})
 
 # def test_launcher_withdraws_after_failed_launch():

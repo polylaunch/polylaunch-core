@@ -3,7 +3,7 @@ pragma solidity ^0.6.9;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 /*
-ERC20 wrapper used for testing. Any account can call mint()
+* @dev used for testing ERC20 wrapper used for testing. Any account can call mint()
 */
 
 contract BasicERC20 is ERC20 {

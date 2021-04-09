@@ -6,6 +6,7 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 
 /**
  * @title Governable ERC20 to be used with Polylaunch
+ * @author Polylaunch Protocol
  * @notice This contract should be used in combination with Polylaunch to ensure a governable erc20 token
  */
 contract GovernableERC20 {

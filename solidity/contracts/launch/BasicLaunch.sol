@@ -175,7 +175,7 @@ contract BasicLaunch is PolyVault, ReentrancyGuard {
             "Launch has reached funding cap"
         );
         require(
-            self.provided[msg.sender] + amount <= self.INDIVIDUAL_FUNDING_CAP,
+            self.provided[msg.sender].add(amount) <= self.INDIVIDUAL_FUNDING_CAP,
             "You have reached the individual funding cap"
         );
         require(

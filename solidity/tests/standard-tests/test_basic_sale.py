@@ -199,8 +199,6 @@ def test_investors_claim_nft_after_successful_launch(
         )
         assert round(int(venture_bond_contract.tappableBalance(
             token_id, {"from": inv})), int(-13)) == round(int(((constants.AMOUNT_FOR_SALE) / len(investors))), int(-13))
-        print(venture_bond_contract.tappableBalance(token_id, {"from": inv}), constants.AMOUNT_FOR_SALE / len(investors))
-        print(venture_bond_contract.votingPower(token_id, {"from": inv}), constants.AMOUNT_FOR_SALE / len(investors))
         assert round(int(venture_bond_contract.votingPower(
             token_id, {"from": inv})), int(-13)) == round(int(((constants.AMOUNT_FOR_SALE) / len(investors))), int(-13))
 

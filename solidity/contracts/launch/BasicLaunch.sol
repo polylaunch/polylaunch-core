@@ -23,7 +23,6 @@ import {LaunchVault} from "./LaunchVault.sol";
  * @author PolyLaunch Protocol
  * @title Basic launch
  * @notice A PolyLaunch DAICO launch contract following an IBCO/Dynamic swap pool mechanism
- * @dev should add a sweeper function to withdraw tokens accidentally sent into the contract
  */
 contract BasicLaunch is PolyVault, ReentrancyGuard {
     using SafeERC20 for IERC20;
@@ -176,7 +175,7 @@ contract BasicLaunch is PolyVault, ReentrancyGuard {
         );
         require(block.timestamp < self.END, "The offering has already ended");
         require(
-            self.USD.balanceOf(address(this)) < self.FUNDING_CAP,
+            self.totalFunding.add(amount) <= self.FUNDING_CAP,
             "The offering has reached its funding cap"
         );
 

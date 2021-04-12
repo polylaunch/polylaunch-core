@@ -30,9 +30,7 @@ def test_mint_an_nft(successful_launch, accounts, deployed_factory):
         assert venture_bond_contract.tapRate(token_id, {"from": inv}) == constants.INITIAL_INV_TAP_RATE
         assert round(int(venture_bond_contract.tappableBalance(
             token_id, {"from": inv})), int(-13)) == round(int(((constants.AMOUNT_FOR_SALE) / len(investors))), int(-13))
-        print(venture_bond_contract.tappableBalance(token_id, {"from": inv}),
               constants.AMOUNT_FOR_SALE / len(investors))
-        print(venture_bond_contract.votingPower(token_id, {"from": inv}), constants.AMOUNT_FOR_SALE / len(investors))
         assert round(int(venture_bond_contract.votingPower(
             token_id, {"from": inv})), int(-13)) == round(int(((constants.AMOUNT_FOR_SALE) / len(investors))), int(-13))
         assert venture_bond_contract.tokenURI(token_id, {"from": inv}) == constants.GENERIC_NFT_DATA[0]

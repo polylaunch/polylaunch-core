@@ -1,0 +1,3 @@
+solidity/build/
+solidity/tests/mainnet-fork-tests/__pycache__/
+solidity/tests/standard-tests/__pycache__/

@@ -29,14 +29,12 @@ def claim_refund_after_succeeded_proposal_succeeds_comp(
     governor.execute(proposal_id, {"from": accounts[0]})
     after_cdai_balance = cdai.balanceOf(launch.address)
     after_dai_balance = dai.balanceOf(launch.address)
-    print(initial_dai_balance, after_dai_balance, initial_cdai_balance, after_cdai_balance)
     token_address = launch.tokenForLaunch({"from": accounts[1]})
     token_contract = brownie.GovernableERC20.at(token_address)
     assert after_dai_balance > 9000e18
     assert after_cdai_balance == 0
 
     tx = launch.claimRefund(0, {"from": accounts[1]})
-    print(tx.return_value)
     assert 1100e18 > tx.return_value > 1000e18
 
 
@@ -58,15 +56,12 @@ def claim_refund_after_succeeded_proposal_succeeds_yearn(
     after_ydai_balance = ydai.balanceOf(launch.address)
     after_dai_balance = dai.balanceOf(launch.address)
     ydai_after_price = ydai.pricePerShare({"from": accounts[0]})
-    print(initial_dai_balance, after_dai_balance, initial_ydai_balance, after_ydai_balance)
-    print(ydai_before_price, ydai_after_price, (ydai_before_price*initial_ydai_balance)/1e18)
     token_address = launch.tokenForLaunch({"from": accounts[1]})
     token_contract = brownie.GovernableERC20.at(token_address)
     assert after_dai_balance > 9000e18
     assert after_ydai_balance == 0
 
     tx = launch.claimRefund(0, {"from": accounts[1]})
-    print(tx.return_value)
     assert  1100e18 > tx.return_value > 1000e18
 
 
@@ -87,12 +82,10 @@ def claim_refund_after_succeeded_proposal_succeeds_aave(
     governor.execute(proposal_id, {"from": accounts[0]})
     after_adai_balance = adai.balanceOf(launch.address)
     after_dai_balance = dai.balanceOf(launch.address)
-    print(initial_dai_balance, after_dai_balance, initial_adai_balance, after_adai_balance)
     token_address = launch.tokenForLaunch({"from": accounts[1]})
     token_contract = brownie.GovernableERC20.at(token_address)
     assert after_dai_balance > 9000e18
     assert after_adai_balance == 0
 
     tx = launch.claimRefund(0, {"from": accounts[1]})
-    print(tx.return_value)
     assert 1100e18 > tx.return_value > 1000e18

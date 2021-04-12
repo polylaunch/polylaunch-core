@@ -23,7 +23,6 @@ import {LaunchVault} from "./LaunchVault.sol";
  * @author PolyLaunch Protocol
  * @title Basic launch
  * @notice A PolyLaunch DAICO launch contract following a fixed price mechanism
- * @dev should add a sweeper function to withdraw tokens accidentally sent into the contract
  */
 contract BasicLaunch is PolyVault, ReentrancyGuard {
     using SafeERC20 for IERC20;
@@ -139,7 +138,7 @@ contract BasicLaunch is PolyVault, ReentrancyGuard {
         self.END = launchInfo._endDate;
         self.MINIMUM_FUNDING = launchInfo._minimumFunding;
         self.FUNDING_CAP = launchInfo._fundingCap;
-        self.INDIVIDUAL_FUNDING_CAP = launchInfo._individualFundingCap;
+        self.INDIVIDUAL_FUNDING_CAP = launchInfo._individualFundingCap == 0 ? 2^256-1 : launchInfo._individualFundingCap;
         self.FIXED_SWAP_RATE = launchInfo._fixedSwapRate;
         self.fundRecipient = launchInfo._fundRecipient;
         self.launcherTapRate = launchInfo._initialLauncherTapRate;
@@ -171,7 +170,7 @@ contract BasicLaunch is PolyVault, ReentrancyGuard {
         );
         require(block.timestamp < self.END, "Launch has ended");
         require(
-            self.USD.balanceOf(address(this)) < self.FUNDING_CAP,
+            self.totalFunding.add(amount) <= self.FUNDING_CAP,
             "Launch has reached funding cap"
         );
         require(

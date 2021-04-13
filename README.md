@@ -17,7 +17,7 @@ For it to work fast you need your ETHERSCAN_TOKEN api key in your environmental 
 https://eth-brownie.readthedocs.io/en/stable/network-management.html#using-infura 
 ```
 $ cd solidity
-$ brownie test tests/mainnet-fork-tests --network mainnet-fork -s
+$ brownie test tests/mainnet-fork-tests --network mainnet-fork
 ```
 
 ## Polylaunch Protocol Flowcharts

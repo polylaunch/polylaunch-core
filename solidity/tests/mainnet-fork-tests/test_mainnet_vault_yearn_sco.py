@@ -21,18 +21,10 @@ def test_deposit_to_all_funds_withdrawn(successful_launch, accounts, ydai, gen_l
 
     # brownie.chain.sleep(10000000000)
     tx = launch_contract.launcherTap({"from": accounts[0]})
-    print(tx.events)
     after_dai_balance = usd_contract.balanceOf(launch_contract.address)
     after_ydai_balance = ydai.balanceOf(launch_contract.address)
     after_dai_own_balance = usd_contract.balanceOf(accounts[0])
-    print(
-        initial_dai_balance,
-        after_dai_balance,
-        initial_ydai_balance,
-        after_ydai_balance,
-        initial_dai_own_balance,
-        after_dai_own_balance
-    )
+
     assert initial_dai_balance > after_dai_balance
     assert initial_ydai_balance > after_ydai_balance
     assert initial_dai_own_balance < after_dai_own_balance
@@ -40,15 +32,12 @@ def test_deposit_to_all_funds_withdrawn(successful_launch, accounts, ydai, gen_l
     assert after_ydai_balance != 0
     launch_contract.exitFromVault({"from": accounts[0]})
     system_a_dai_balance = usd_contract.balanceOf(deployed_factory[1])
-    print(usd_contract.balanceOf(launch_contract.address))
-    print(system_i_dai_balance, system_a_dai_balance)
     assert ydai.balanceOf(launch_contract.address) == 0
     assert system_i_dai_balance < system_a_dai_balance
     brownie.chain.sleep(10000000000)
     tx = launch_contract.launcherTap({"from": accounts[0]})
     assert "LauncherFundsTapped" in tx.events
     assert usd_contract.balanceOf(launch_contract.address) == 0
-    print(usd_contract.balanceOf(accounts[0]))
     with brownie.reverts("There are no funds to withdraw"):
         launch_contract.launcherTap({"from": accounts[0]})
     init_sys_owner_balance = usd_contract.balanceOf(accounts[0])
@@ -66,16 +55,12 @@ def test_dev_deposit_yvDAI(successful_launch, accounts, dai, ydai):
     initial_balance = dai.balanceOf(ydai.address)
     initial_ydai = ydai.balanceOf(launch_contract.address)
     tx = launch_contract.deposit(2, {"from": accounts[0]})
-    print(tx.events)
     assert "VaultFundsDeposited" in tx.events
     after_balance = dai.balanceOf(ydai.address)
     after_ydai = ydai.balanceOf(launch_contract.address)
     assert initial_ydai < after_ydai
     assert initial_balance < after_balance
-    print(initial_balance, after_balance)
-    print(initial_ydai, after_ydai)
     assert dai.balanceOf(launch_contract.address) == 0
-    print(ydai.balanceOf(launch_contract.address, {"from": accounts[0]}))
 
 
 def test_deposit_yearn_not_launcher(successful_launch, accounts):
@@ -141,14 +126,8 @@ def test_dev_tap_yvDAI(successful_launch, accounts, ydai, dai):
 
     tx = launch_contract.launcherTap({"from": accounts[0]})
     assert "VaultFundsTapped" in tx.events
-    print(tx.events)
     third_balance = usd_contract.balanceOf(accounts[0], {"from": accounts[0]})
     assert third_balance > second_balance
-    print(constants.INITIAL_DEV_TAP_RATE * (brownie.chain.time() - timestamp_before))
-    print(initial_balance)
-    print(second_balance)
-    print(third_balance)
-    print(usd_contract.balanceOf(accounts[0], {"from": accounts[0]}) - second_balance)
 
 
 def test_tap_yearn_not_launcherlauncher(success_launch_yearn, accounts):
@@ -187,7 +166,6 @@ def test_exit_vault_yearn(
     assert after_ydai_balance == 0
     system_dai_balance = dai.balanceOf(system.address)
     assert system_dai_balance != 0
-    print(initial_dai_balance, initial_ydai_balance, after_dai_balance, after_ydai_balance, system_dai_balance)
 
 
 def test_double_exit_attempt(successful_launch, accounts, deployed_factory, gen_lev_farm_strat):

@@ -18,7 +18,7 @@ import "../../interfaces/IVentureBond.sol";
 /**
  * @title A tradable tap access control token system, with perpetual equity to creators
  * @notice This contract provides an interface to mint a venture bond with a market
- * owned by the creator, market to be modified.
+ * owned by the creator.
  */
 contract VentureBond is IVentureBond, ERC721Burnable, ReentrancyGuard {
     using Counters for Counters.Counter;

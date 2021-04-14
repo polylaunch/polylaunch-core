@@ -18,7 +18,6 @@ import {LaunchLogger} from "./LaunchLogger.sol";
  * @author PolyLaunch Protocol
  * @title launch factory
  * @notice The factory that can deploy DAICOs
- * @dev should add a sweeper function to withdraw tokens accidentally sent into the contract
  */
 contract LaunchFactory is CloneFactory, PolylaunchSystemAuthority, ILaunchFactory {
     // address of the launch contract used as template for proxies

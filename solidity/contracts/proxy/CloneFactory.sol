@@ -22,6 +22,7 @@ pragma solidity ^0.7.4;
 
 //solhint-disable max-line-length
 //solhint-disable no-inline-assembly
+/// @dev used for creating proxy contracts
 
 contract CloneFactory {
     function createClone(address target) internal returns (address result) {

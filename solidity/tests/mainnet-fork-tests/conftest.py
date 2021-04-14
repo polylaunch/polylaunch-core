@@ -160,6 +160,8 @@ def running_launch(mint_dummy_token, accounts, deployed_factory):
             constants.INITIAL_DEV_TAP_RATE,
             constants.INITIAL_INV_TAP_RATE,
             constants.FUNDING_CAP,
+            constants.INDIVIDUAL_FUNDING_CAP,
+            constants.FIXED_SWAP_RATE,
             constants.NFT_NAME,
             constants.NFT_SYMBOL,
             constants.GENERIC_NFT_DATA,

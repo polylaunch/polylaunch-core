@@ -56,6 +56,12 @@ contract LaunchLogger {
         emit TokensWithdrawnAfterFailedLaunch(launchAddress);
     }
 
+    event UnsoldTokensWithdrawn(address indexed launchAddress, uint256 amount);
+
+    function logUnsoldTokensWithdrawn(address launchAddress, uint256 amount) external {
+        emit UnsoldTokensWithdrawn(launchAddress, amount);
+    }
+
     // ===== LaunchGovernance =====
 
     event RefundClaimed(

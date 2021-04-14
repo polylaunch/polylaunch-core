@@ -74,15 +74,15 @@ library LaunchRedemption {
     function supporterTap(LaunchUtils.Data storage self, uint256 tokenId)
         internal
     {
-        require(self.launchSuccessful, "The launch was unsuccessful.");
+        require(self.launchSuccessful, "Launch Unsuccessful.");
         require(
             IERC721(self.ventureBondAddress).ownerOf(tokenId) == msg.sender,
-            "You do not own the token you have attempted to tap from."
+            "Not your ventureBond"
         );
 
         uint256 withdrawable =
             LaunchUtils.getSupporterWithdrawableFunds(self, tokenId);
-        require(withdrawable > 0, "There are no funds to withdraw");
+        require(withdrawable > 0, "No funds to withdraw");
 
         uint256 tappableBalance =
             IVentureBond(self.ventureBondAddress).tappableBalance(tokenId);
@@ -97,6 +97,11 @@ library LaunchRedemption {
             newTappableBalance,
             msg.sender
         );
+        //dealing with wei rounding errors for the last withdrawer
+        uint256 tokenBalance_ = self.TOKEN.balanceOf(address(this));
+        if ( tokenBalance_ < withdrawable){
+            withdrawable = tokenBalance_;
+        }
         self.TOKEN.safeTransfer(msg.sender, withdrawable);
 
         LaunchLogger(self.polylaunchSystem).logSupporterFundsTapped(
@@ -115,10 +120,10 @@ library LaunchRedemption {
     function withdrawTokenAfterFailedLaunch(LaunchUtils.Data storage self)
         internal
     {
-        require(self.END < block.timestamp, "The offering must be completed");
+        require(self.END < block.timestamp, "Launch not ended");
         require(
             self.totalFunding < self.MINIMUM_FUNDING,
-            "The required amount has been provided!"
+            "Launch successful"
         );
         self.TOKEN.safeTransfer(
             msg.sender,
@@ -126,6 +131,27 @@ library LaunchRedemption {
         );
         LaunchLogger(self.polylaunchSystem).logTokensWithdrawnAfterFailedLaunch(
             address(this)
+        );
+    }
+
+    /**
+     * @notice Launcher can withdraw the tokens sent to the contract that were not sold during the window
+     * @param self Data struct associated with the launch
+     */
+    function withdrawUnsoldTokens(LaunchUtils.Data storage self)
+        internal
+    {
+        require(self.END < block.timestamp, "The offering must be completed");
+        uint256 soldTokens = (self.totalFunding.mul(self.FIXED_SWAP_RATE)).div(1e18);
+        require(soldTokens < self.TOTAL_TOKENS_FOR_SALE, "All tokens sold");
+        uint256 unsoldTokens = self.TOTAL_TOKENS_FOR_SALE.sub(soldTokens);
+        self.TOKEN.safeTransfer(
+            msg.sender,
+            unsoldTokens
+        );
+        LaunchLogger(self.polylaunchSystem).logUnsoldTokensWithdrawn(
+            address(this),
+            unsoldTokens
         );
     }
 
@@ -140,11 +166,11 @@ library LaunchRedemption {
     ) internal {
         require(
             block.timestamp > self.END,
-            "The offering has not finished yet"
+            "The offering has not finished"
         );
         require(
             self.provided[msg.sender] > 0,
-            "You did not contribute to this offering"
+            "msg.sender not eligible"
         );
 
         if (block.timestamp > self.END && !self.launchSuccessful) {
@@ -153,7 +179,7 @@ library LaunchRedemption {
             }
         }
 
-        if (self.totalFunding >= self.MINIMUM_FUNDING) {
+        if (self.launchSuccessful) {
             _claimVentureBond(self, register);
         } else {
             uint256 userProvided = self.provided[msg.sender];
@@ -176,16 +202,12 @@ library LaunchRedemption {
         VentureBondDataRegistry.Register storage register
     ) private {
         require(
-            self.launchSuccessful,
-            "The minimum amount was not raised or the launch has not finished"
-        );
-        require(
             !self.nftRedeemed[msg.sender],
-            "You have already claimed your control token"
+            "Venture Bond already claimed"
         );
         uint256 userProvided = self.provided[msg.sender];
         uint256 tokenAmount =
-            self.TOTAL_TOKENS_FOR_SALE.mul(userProvided).div(self.totalFunding);
+            (userProvided.mul(self.FIXED_SWAP_RATE)).div(1e18);
         self.totalVotingPower += tokenAmount;
         uint256 tokenId = IVentureBond(self.ventureBondAddress).tokenIdCounter();
         IVentureBond.BaseNFTData memory _nftData = register.nftData[tokenId];

@@ -18,7 +18,7 @@ pragma experimental ABIEncoderV2;
  * NOTE: This file is a clone of the dydx protocol's Decimal.sol contract. It was forked from https://github.com/dydxprotocol/solo
  * at commit 2d8454e02702fe5bc455b848556660629c3cad36
  *
- * It has not been modified other than to use a newer solidity in the pragma to match the rest of the contract suite of this project
+ * It has not been modified other than to use a newer solidity in the pragma to match the rest of the contract suite of this project, used within IMarket.sol
  */
 
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";

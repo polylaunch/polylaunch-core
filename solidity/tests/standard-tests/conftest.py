@@ -33,26 +33,28 @@ from brownie import (
 
 @pytest.fixture(scope="module", autouse=True)
 def deployed_factory(usd_contract, accounts):
-    constants = PolylaunchConstants.deploy({"from": accounts[0]})
-    registry = VentureBondDataRegistry.deploy({"from": accounts[0]})
-    utils = LaunchUtils.deploy({"from": accounts[0]})
-    redemption = LaunchRedemption.deploy({"from": accounts[0]})
-    logger = LaunchLogger.deploy({"from": accounts[0]})
-    governance = LaunchGovernance.deploy({"from": accounts[0]})
-    governor = GovernorAlpha.deploy({"from": accounts[0]})
-    market = Market.deploy({"from": accounts[0]})
-    launch = BasicLaunch.deploy({"from": accounts[0]})
+    deployer = accounts.at("0xC3D6880fD95E06C817cB030fAc45b3fae3651Cb0", force=True)
+    constants = PolylaunchConstants.deploy({"from": deployer})
+    registry = VentureBondDataRegistry.deploy({"from": deployer})
+    utils = LaunchUtils.deploy({"from": deployer})
+    redemption = LaunchRedemption.deploy({"from": deployer})
+    logger = LaunchLogger.deploy({"from": deployer})
+    governance = LaunchGovernance.deploy({"from": deployer})
+    governor = GovernorAlpha.deploy({"from": deployer})
+    market = Market.deploy({"from": deployer})
+    launch = BasicLaunch.deploy({"from": deployer})
     system = PolylaunchSystem.deploy(
         usd_contract.address,
         launch.address,
         governor.address,
         market.address,
-        {"from": accounts[0]},
+        {"from": deployer},
     )
-    auth = PolylaunchSystemAuthority.deploy(system.address, {"from": accounts[0]})
+    auth = PolylaunchSystemAuthority.deploy(system.address, {"from": deployer})
     factory = LaunchFactory.at(
         system.tx.events["PolylaunchSystemLaunched"]["factoryAddress"]
     )
+    accounts.remove(deployer)
     yield factory
 
 @pytest.fixture(scope="module", autouse=True)

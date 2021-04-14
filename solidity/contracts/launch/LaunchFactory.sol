@@ -9,6 +9,7 @@ import "../proxy/CloneFactory.sol";
 import "../venture-nft/VentureBond.sol";
 import "../venture-nft/Market.sol";
 import "../system/PolylaunchSystemAuthority.sol";
+import {Counters} from "@openzeppelin/contracts/utils/Counters.sol";
 import "../governance/LaunchGovernor.sol";
 import "../../interfaces/IVentureBond.sol";
 import "../../interfaces/ILaunchFactory.sol";
@@ -20,6 +21,7 @@ import {LaunchLogger} from "./LaunchLogger.sol";
  * @notice The factory that can deploy DAICOs
  */
 contract LaunchFactory is CloneFactory, PolylaunchSystemAuthority, ILaunchFactory {
+    using Counters for Counters.Counter;
     // address of the launch contract used as template for proxies
     address public baseBasicLaunchAddress;
     // address of the Venture Bond contract used as template for proxies
@@ -32,6 +34,8 @@ contract LaunchFactory is CloneFactory, PolylaunchSystemAuthority, ILaunchFactor
     address private vaultRegistryAddress;
     // IERC20 interface for DAI
     IERC20 public usdAddress;
+    // tracker for the number of launches
+    Counters.Counter public launchIdTracker;
     //   address public baseDutchAuctionAddress; future (example)
     //   address public nftTokenAddress; future (example)
 
@@ -146,7 +150,8 @@ contract LaunchFactory is CloneFactory, PolylaunchSystemAuthority, ILaunchFactor
                 polylaunchSystemAddress
             );
         BasicLaunch clone = BasicLaunch(payable(createdBasicLaunchAddr));
-
+        uint256 launchId_ = launchIdTracker.current();
+        launchIdTracker.increment();
         address createdGovernorAddr = createClone(baseGovernorAddress);
 
         clone.setOwnership(address(this), msg.sender, createdGovernorAddr);
@@ -183,7 +188,8 @@ contract LaunchFactory is CloneFactory, PolylaunchSystemAuthority, ILaunchFactor
                 createdBasicLaunchAddr,
                 createdMarketAddr,
                 createdVentureBondAddr,
-                createdGovernorAddr
+                createdGovernorAddr,
+                launchId_
         );
         return createdBasicLaunchAddr;
     }

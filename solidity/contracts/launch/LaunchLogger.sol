@@ -153,20 +153,23 @@ contract LaunchLogger {
         address indexed createdBasicLaunchAddress,
         address createdVentureBondAddress,
         address createdMarketAddress,
-        address createdGovernorAddress
+        address createdGovernorAddress,
+        uint256 launchId
     );
 
     function logBasicLaunchCreated(
         address _createdBasicLaunchAddr,
         address _createdVentureBondAddr,
         address _createdMarketAddr,
-        address _createdGovernorAddr
+        address _createdGovernorAddr,
+        uint256 _launchId
     ) external {
         emit BasicLaunchCreated(
                 _createdBasicLaunchAddr,
                 _createdVentureBondAddr,
                 _createdMarketAddr,
-                _createdGovernorAddr);
+                _createdGovernorAddr,
+                _launchId);
     }
 
 }

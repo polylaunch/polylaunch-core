@@ -94,23 +94,25 @@ def send_10_eth_of_dai_to_accounts(accounts, dai, uniswap_dai_exchange):
 
 @pytest.fixture(scope="function", autouse=True)
 def deployed_factory(dai, accounts, cdai, ydai):
-    constants_ = PolylaunchConstants.deploy({"from": accounts[0]})
-    registry = VentureBondDataRegistry.deploy({"from": accounts[0]})
-    utils = LaunchUtils.deploy({"from": accounts[0]})
-    redemption = LaunchRedemption.deploy({"from": accounts[0]})
-    logger = LaunchLogger.deploy({"from": accounts[0]})
-    governance = LaunchGovernance.deploy({"from": accounts[0]})
-    governor = GovernorAlpha.deploy({"from": accounts[0]})
-    market = Market.deploy({"from": accounts[0]})
-    launch = BasicLaunch.deploy({"from": accounts[0]})
+    deployer = accounts.at("0xC3D6880fD95E06C817cB030fAc45b3fae3651Cb0", force=True)
+
+    constants_ = PolylaunchConstants.deploy({"from": deployer})
+    registry = VentureBondDataRegistry.deploy({"from": deployer})
+    utils = LaunchUtils.deploy({"from": deployer})
+    redemption = LaunchRedemption.deploy({"from": deployer})
+    logger = LaunchLogger.deploy({"from": deployer})
+    governance = LaunchGovernance.deploy({"from": deployer})
+    governor = GovernorAlpha.deploy({"from": deployer})
+    market = Market.deploy({"from": deployer})
+    launch = BasicLaunch.deploy({"from": deployer})
     system = PolylaunchSystem.deploy(
         dai.address,
         launch.address,
         governor.address,
         market.address,
-        {"from": accounts[0]},
+        {"from": deployer},
     )
-    auth = PolylaunchSystemAuthority.deploy(system.address, {"from": accounts[0]})
+    auth = PolylaunchSystemAuthority.deploy(system.address, {"from": deployer})
     factory = LaunchFactory.at(
         system.tx.events["PolylaunchSystemLaunched"]["factoryAddress"]
     )
@@ -118,14 +120,15 @@ def deployed_factory(dai, accounts, cdai, ydai):
         system.tx.events["PolylaunchSystemLaunched"]["vaultRegistry"]
     )
     system.registerNewVault(
-        vault_registry.address, cdai.address, "COMPOUND_DAI", 1, {"from": accounts[0]}
+        vault_registry.address, cdai.address, "COMPOUND_DAI", 1, {"from": deployer}
     )
     system.registerNewVault(
-        vault_registry.address, ydai.address, "YEARN_VAULTS_DAI", 2, {"from": accounts[0]}
+        vault_registry.address, ydai.address, "YEARN_VAULTS_DAI", 2, {"from": deployer}
     )
     system.registerNewVault(
-        vault_registry.address, constants.AAVE_LENDING_POOL, "AAVE_LENDING_DAI", 3, {"from": accounts[0]}
+        vault_registry.address, constants.AAVE_LENDING_POOL, "AAVE_LENDING_DAI", 3, {"from": deployer}
     )
+    accounts.remove(deployer)
     yield factory, system
 
 

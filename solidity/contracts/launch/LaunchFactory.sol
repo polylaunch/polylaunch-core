@@ -9,6 +9,7 @@ import "../proxy/CloneFactory.sol";
 import "../venture-nft/VentureBond.sol";
 import "../venture-nft/Market.sol";
 import "../system/PolylaunchSystemAuthority.sol";
+import {Counters} from "@openzeppelin/contracts/utils/Counters.sol";
 import "../governance/LaunchGovernor.sol";
 import "../../interfaces/IVentureBond.sol";
 import "../../interfaces/ILaunchFactory.sol";
@@ -20,6 +21,7 @@ import {LaunchLogger} from "./LaunchLogger.sol";
  * @notice The factory that can deploy DAICOs
  */
 contract LaunchFactory is CloneFactory, PolylaunchSystemAuthority, ILaunchFactory {
+    using Counters for Counters.Counter;
     // address of the launch contract used as template for proxies
     address public baseBasicLaunchAddress;
     // address of the Venture Bond contract used as template for proxies
@@ -32,6 +34,8 @@ contract LaunchFactory is CloneFactory, PolylaunchSystemAuthority, ILaunchFactor
     address private vaultRegistryAddress;
     // IERC20 interface for DAI
     IERC20 public usdAddress;
+    // tracker for the number of launches
+    Counters.Counter public launchIdTracker;
     //   address public baseDutchAuctionAddress; future (example)
     //   address public nftTokenAddress; future (example)
 
@@ -126,6 +130,14 @@ contract LaunchFactory is CloneFactory, PolylaunchSystemAuthority, ILaunchFactor
     }
 
     /**
+     * @notice return the launch id of the next launch (the current launchid)
+     * @return the launchId of the next launch
+     */
+    function launchIdCounter() public view returns (uint256) {
+        return launchIdTracker.current();
+    }
+
+    /**
      * @notice creates a basic launch and emits an event with the associated market and VentureBond addresses of the launch
      * @param launchInfo struct data for launchInfo data to configure the launch
      * @return created Basic launch address
@@ -146,7 +158,8 @@ contract LaunchFactory is CloneFactory, PolylaunchSystemAuthority, ILaunchFactor
                 polylaunchSystemAddress
             );
         BasicLaunch clone = BasicLaunch(payable(createdBasicLaunchAddr));
-
+        uint256 launchId_ = launchIdTracker.current();
+        launchIdTracker.increment();
         address createdGovernorAddr = createClone(baseGovernorAddress);
 
         clone.setOwnership(address(this), msg.sender, createdGovernorAddr);
@@ -171,7 +184,8 @@ contract LaunchFactory is CloneFactory, PolylaunchSystemAuthority, ILaunchFactor
             clone,
             launchInfo,
             createdVentureBondAddr,
-            createdMarketAddr
+            createdMarketAddr,
+            launchId_
         );
         governorClone.init(
             "Governor",
@@ -183,7 +197,8 @@ contract LaunchFactory is CloneFactory, PolylaunchSystemAuthority, ILaunchFactor
                 createdBasicLaunchAddr,
                 createdMarketAddr,
                 createdVentureBondAddr,
-                createdGovernorAddr
+                createdGovernorAddr,
+                launchId_
         );
         return createdBasicLaunchAddr;
     }
@@ -199,14 +214,16 @@ contract LaunchFactory is CloneFactory, PolylaunchSystemAuthority, ILaunchFactor
         BasicLaunch basicLaunch,
         ILaunchFactory.LaunchInfo memory launchInfo,
         address createdVentureBondAddr,
-        address createdMarketAddr
+        address createdMarketAddr,
+        uint256 launchId
     ) internal {
         basicLaunch.init(
             usdAddress,
             launchInfo,
             createdVentureBondAddr,
             createdMarketAddr,
-            polylaunchSystemAddress
+            polylaunchSystemAddress,
+            launchId
         );
     }
 

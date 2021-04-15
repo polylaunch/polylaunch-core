@@ -130,6 +130,14 @@ contract LaunchFactory is CloneFactory, PolylaunchSystemAuthority, ILaunchFactor
     }
 
     /**
+     * @notice return the launch id of the next launch (the current launchid)
+     * @return the launchId of the next launch
+     */
+    function launchIdCounter() public view returns (uint256) {
+        return launchIdTracker.current();
+    }
+
+    /**
      * @notice creates a basic launch and emits an event with the associated market and VentureBond addresses of the launch
      * @param launchInfo struct data for launchInfo data to configure the launch
      * @return created Basic launch address
@@ -176,7 +184,8 @@ contract LaunchFactory is CloneFactory, PolylaunchSystemAuthority, ILaunchFactor
             clone,
             launchInfo,
             createdVentureBondAddr,
-            createdMarketAddr
+            createdMarketAddr,
+            launchId_
         );
         governorClone.init(
             "Governor",
@@ -205,14 +214,16 @@ contract LaunchFactory is CloneFactory, PolylaunchSystemAuthority, ILaunchFactor
         BasicLaunch basicLaunch,
         ILaunchFactory.LaunchInfo memory launchInfo,
         address createdVentureBondAddr,
-        address createdMarketAddr
+        address createdMarketAddr,
+        uint256 launchId
     ) internal {
         basicLaunch.init(
             usdAddress,
             launchInfo,
             createdVentureBondAddr,
             createdMarketAddr,
-            polylaunchSystemAddress
+            polylaunchSystemAddress,
+            launchId
         );
     }
 

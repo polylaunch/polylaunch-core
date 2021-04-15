@@ -27,6 +27,8 @@ library LaunchUtils {
     using SafeMath for uint256;
 
     struct Data {
+        // unique id of the launch
+        uint256 launchId;
         // whether a launch is initialised
         bool initialised;
         // contract for dai/usd (accepted investment currency)

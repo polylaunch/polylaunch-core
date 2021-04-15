@@ -110,7 +110,8 @@ contract BasicLaunch is PolyVault, ReentrancyGuard {
         ILaunchFactory.LaunchInfo memory launchInfo,
         address _ventureBondContract,
         address _marketContract,
-        address _system
+        address _system,
+        uint256 _launchId
     ) public onlyFactory {
         require(!self.initialised, "Contract already initialised");
         require(
@@ -130,6 +131,7 @@ contract BasicLaunch is PolyVault, ReentrancyGuard {
             <= launchInfo._totalForSale, "Insufficient tokens provided for the given swap rate"
         );
 
+        self.launchId = _launchId;
         self.polylaunchSystem = _system;
         self.USD = _usd;
         self.TOKEN = launchInfo._token;
@@ -299,6 +301,14 @@ contract BasicLaunch is PolyVault, ReentrancyGuard {
      */
     function governor() public view returns (address) {
         return self.governor;
+    }
+
+    /**
+     * @notice View function to return the launchId
+     * @return the launchId
+     */
+    function launchId() external view returns (uint256) {
+        return self.launchId;
     }
 
     /**

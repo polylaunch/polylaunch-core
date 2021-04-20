@@ -39,7 +39,7 @@ interface ILaunchFactory {
         // desired symbol of the NFT associated with the launch
         string _nftSymbol;
         // generic data for an NFT
-        IVentureBond.BaseNFTData _genericNftData;
+        IVentureBond.MediaData _genericNftData;
     }
 
     function getVaultRegistryAddress() external returns (address);

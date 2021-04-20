@@ -164,6 +164,14 @@ contract GovernorAlpha {
         _;
     }
 
+    modifier isBondAssociatedWithLaunch(uint256 tokenId){
+        require(
+            ventureBond.launchAddressAssociatedWithToken(tokenId) == address(basicLaunch),
+            "isBondAssociatedWithLaunch: Token not associated with this launch"
+        );
+        _;
+    }
+
     function init(
         string memory name_,
         address basicLaunch_,
@@ -235,9 +243,9 @@ contract GovernorAlpha {
         return p.id;
     }
 
-    function proposeRefund(string memory description) public returns (uint256) {
+    function proposeRefund(string memory description, uint256 tokenId) public returns (uint256) {
         require(
-            ventureBond.balanceOf(msg.sender) >= 1 ||
+            (ventureBond.ownerOf(tokenId) == msg.sender && ventureBond.launchAddressAssociatedWithToken(tokenId) == address(basicLaunch)) ||
                 msg.sender == basicLaunch.launcher(),
             "LaunchGovernor::proposeRefund: Must be launcher or hold a venture bond to propose a refund"
         );
@@ -380,7 +388,7 @@ contract GovernorAlpha {
         uint256 ventureBondId,
         uint256 proposalId,
         bool support
-    ) public onlyTokenOwner(ventureBondId) {
+    ) public onlyTokenOwner(ventureBondId) isBondAssociatedWithLaunch(ventureBondId) {
         return _castVote(msg.sender, ventureBondId, proposalId, support);
     }
 
@@ -461,4 +469,6 @@ interface VentureBondInterface {
         returns (uint256);
 
     function tappableBalance(uint256 tokenId) external view returns (uint256);
+
+    function launchAddressAssociatedWithToken(uint256 tokenId) external view returns (address);
 }

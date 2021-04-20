@@ -12,7 +12,7 @@ import {IVentureBond} from "../../interfaces/IVentureBond.sol";
 import {PolylaunchConstants} from "../system/PolylaunchConstants.sol";
 import {IMarket} from "../../interfaces/IMarket.sol";
 import {ILaunchFactory} from "../../interfaces/ILaunchFactory.sol";
-import {VentureBondDataRegistry} from "../venture-nft/VentureBondDataRegistry.sol";
+import {VentureBondDataRegistry} from "../venture-bond/VentureBondDataRegistry.sol";
 
 import "../../interfaces/IPolyVault.sol";
 import "../../interfaces/ILaunchFactory.sol";
@@ -78,6 +78,11 @@ library LaunchRedemption {
         require(
             IERC721(self.ventureBondAddress).ownerOf(tokenId) == msg.sender,
             "Not your ventureBond"
+        );
+
+        require(
+            IVentureBond(self.ventureBondAddress).launchAddressAssociatedWithToken(tokenId) == address(this),
+            "supporterTap: ventureBond not associated with this launch"
         );
 
         uint256 withdrawable =
@@ -209,23 +214,17 @@ library LaunchRedemption {
         uint256 tokenAmount =
             (userProvided.mul(self.FIXED_SWAP_RATE)).div(1e18);
         self.totalVotingPower += tokenAmount;
-        uint256 tokenId = IVentureBond(self.ventureBondAddress).tokenIdCounter();
-        IVentureBond.BaseNFTData memory _nftData = register.nftData[tokenId];
+        uint256 i = register.supporterIndex[msg.sender];
+        IVentureBond.MediaData memory _nftData = register.nftData[i];
         // if the token launcher hasnt assigned data to this nft then mint a basic one with just the important data
-        if (_nftData.contentHash == 0) {
-            _nftData = IVentureBond.BaseNFTData({
+        if (_nftData.metadataHash == 0) {
+            _nftData = IVentureBond.MediaData({
                 tokenURI: self.genericNftData.tokenURI,
-                metadataURI: self.genericNftData.metadataURI,
-                contentHash: self.genericNftData.contentHash,
                 metadataHash: self.genericNftData.metadataHash
             });
         }
-        IVentureBond.VentureBondData memory data =
-            IVentureBond.VentureBondData({
-                tokenURI: _nftData.tokenURI,
-                metadataURI: _nftData.metadataURI,
-                contentHash: _nftData.contentHash,
-                metadataHash: _nftData.metadataHash,
+        IVentureBond.VentureBondParams memory vbParams =
+            IVentureBond.VentureBondParams({
                 tapRate: self.supporterTapRate,
                 lastWithdrawnTime: self.END,
                 tappableBalance: tokenAmount,
@@ -243,7 +242,7 @@ library LaunchRedemption {
                 owner: Decimal.D256(owner)
             });
         self.nftRedeemed[msg.sender] = true;
-        register.isNftMinted[tokenId] = true;
-        IVentureBond(self.ventureBondAddress).mint(data, shares, msg.sender);
+        register.isIndexMinted[i] = true;
+        IVentureBond(self.ventureBondAddress).mint(msg.sender, _nftData, shares, vbParams);
     }
 }

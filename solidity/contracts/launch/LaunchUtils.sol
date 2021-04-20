@@ -8,13 +8,13 @@ import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import {Decimal} from "../Decimal.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
-import "../venture-nft/VentureBond.sol";
-import "../venture-nft/Market.sol";
+import "../venture-bond/VentureBond.sol";
+import "../venture-bond/Market.sol";
 import "../../interfaces/IVentureBond.sol";
 import "../../interfaces/IMarket.sol";
 import "../../interfaces/ICErc20.sol";
 import "../system/PolylaunchConstants.sol";
-import "../venture-nft/VentureBondDataRegistry.sol";
+import "../venture-bond/VentureBondDataRegistry.sol";
 
 /**
  * @author PolyLaunch Protocol
@@ -78,7 +78,7 @@ library LaunchUtils {
         // mapping for whether an address has redeemed their NFT or not
         mapping(address => bool) nftRedeemed;
         // generic nft Data
-        IVentureBond.BaseNFTData genericNftData;
+        IVentureBond.MediaData genericNftData;
         // is yield on launcher funds activated
         bool yieldActivated;
         // is the contract in refund mode

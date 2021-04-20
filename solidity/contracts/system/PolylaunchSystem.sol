@@ -8,8 +8,8 @@ import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "../launch/LaunchFactory.sol";
 import "../launch/BasicLaunch.sol";
 import "../polyvault/PolyVaultRegistry.sol";
-import "../venture-nft/VentureBond.sol";
-import "../venture-nft/Market.sol";
+import "../venture-bond/VentureBond.sol";
+import "../venture-bond/Market.sol";
 import "../governance/LaunchGovernor.sol";
 import "../../interfaces/BasicLaunchInterface.sol";
 
@@ -35,26 +35,26 @@ contract PolylaunchSystem is Ownable, LaunchLogger {
         address systemAddress,
         address baseBasicLaunchAddress,
         address baseGovernorAddress,
-        address baseMarketAddress,
+        address marketAddress,
+        address ventureBondAddress,
         address vaultRegistry
     );
 
     constructor(
         IERC20 usd,
         address basicLaunch,
-        address governor,
-        address market
+        address governor
     ) {
         LaunchFactory launchFactory = new LaunchFactory(address(this));
         PolyVaultRegistry vaultRegistry = new PolyVaultRegistry(address(this));
-        //        BasicLaunch basicLaunch = new BasicLaunch();
-        //        GovernorAlpha governor = new GovernorAlpha();
-        //        //        VentureBond ventureBond = new VentureBond();
-        //        Market market = new Market();
+
+        Market market = new Market();
+        VentureBond ventureBond = new VentureBond(address(market), address(this), address(launchFactory));
+        market.configure(address(ventureBond));
 
         launchFactory.setBaseBasicLaunchAddress(basicLaunch);
-        //        launchFactory.setBaseVentureBondAddress(address(ventureBond));
-        launchFactory.setBaseMarketAddress(market);
+        launchFactory.setMarketAddress(address(market));
+        launchFactory.setVentureBondAddress(address(ventureBond));
         launchFactory.setBaseGovernorAddress(governor);
         launchFactory.setVaultRegistryAddress(address(vaultRegistry));
         launchFactory.setUsdContract(usd);
@@ -64,7 +64,8 @@ contract PolylaunchSystem is Ownable, LaunchLogger {
             address(this),
             basicLaunch,
             governor,
-            market,
+            address(market),
+            address(ventureBond),
             address(vaultRegistry)
         );
     }

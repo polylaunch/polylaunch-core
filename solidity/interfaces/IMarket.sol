@@ -1,6 +1,7 @@
+// SPDX-License-Identifier: GPL-3.0
+
 pragma solidity 0.7.4;
 pragma experimental ABIEncoderV2;
-
 
 import {Decimal} from "../contracts/Decimal.sol";
 
@@ -74,7 +75,7 @@ interface IMarket {
         pure
         returns (uint256);
 
-    function configure(address daicoNftAddress) external;
+    function configure(address ventureBondContractAddress) external;
 
     function setBidShares(uint256 tokenId, BidShares calldata bidShares)
         external;

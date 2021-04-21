@@ -1,5 +1,7 @@
 # Polylaunch Protocol
 
+Important note: this branch uses an old NFT implementation and may not be up to date.
+
 This repo uses brownie, to run the tests carry out all the necessary brownie setup.
 
 To run the standard tests:

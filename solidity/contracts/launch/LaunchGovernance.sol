@@ -89,7 +89,7 @@ library LaunchGovernance {
             );
         }
 
-        self.totalVotingPower -= refundableBalance;
+        self.totalVotingPower.sub(refundableBalance);
         IVentureBond(self.ventureBondAddress).updateVotingPower(
             tokenId,
             bondVotingPower - refundableBalance,

@@ -131,7 +131,7 @@ contract LaunchFactory is CloneFactory, PolylaunchSystemAuthority, ILaunchFactor
 
     /**
      * @notice creates a basic launch and emits an event with the associated market and VentureBond addresses of the launch
-     * @param launchInfo struct data for launchInfo data to configure the launch
+     * @param launchInfo struct data for launchInfo data to configure the launch, see ILaunchFactory
      * @return created Basic launch address
      */
     function createBasicLaunch(ILaunchFactory.LaunchInfo memory launchInfo)

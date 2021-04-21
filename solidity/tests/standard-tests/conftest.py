@@ -41,13 +41,11 @@ def deployed_factory(usd_contract, accounts):
     logger = LaunchLogger.deploy({"from": deployer})
     governance = LaunchGovernance.deploy({"from": deployer})
     governor = GovernorAlpha.deploy({"from": deployer})
-    market = Market.deploy({"from": deployer})
     launch = BasicLaunch.deploy({"from": deployer})
     system = PolylaunchSystem.deploy(
         usd_contract.address,
         launch.address,
         governor.address,
-        market.address,
         {"from": deployer},
     )
     auth = PolylaunchSystemAuthority.deploy(system.address, {"from": deployer})
@@ -116,8 +114,6 @@ def running_launch(mint_dummy_token, accounts, deployed_factory):
             constants.FUNDING_CAP,
             constants.INDIVIDUAL_FUNDING_CAP,
             constants.FIXED_SWAP_RATE,
-            constants.NFT_NAME,
-            constants.NFT_SYMBOL,
             constants.GENERIC_NFT_DATA,
         ],
         {"from": accounts[0]},

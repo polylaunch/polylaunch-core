@@ -18,7 +18,7 @@ def test_mint_an_nft(successful_launch, accounts, deployed_factory):
         tx = launch_contract.claim({"from": inv})
 
         assert "TokenMinted" in tx.events
-        token_id = tx.events["TokenMinted"]["_tokenId"]
+        token_id = tx.events["TokenMinted"]["tokenId"]
         assert token_id == n
         assert venture_bond_contract.balanceOf(inv, {"from": inv}) == 1
         assert venture_bond_contract.ownerOf(token_id, {"from": inv}) == inv
@@ -33,11 +33,8 @@ def test_mint_an_nft(successful_launch, accounts, deployed_factory):
         assert (venture_bond_contract.votingPower(token_id, {"from": inv})
             == (constants.INVESTMENT_AMOUNT*constants.FIXED_SWAP_RATE)/1e18)
         assert venture_bond_contract.tokenURI(token_id, {"from": inv}) == constants.GENERIC_NFT_DATA[0]
-        assert venture_bond_contract.tokenMetadataURI(token_id, {"from": inv}) == constants.GENERIC_NFT_DATA[1]
-        assert "0x" + constants.GENERIC_NFT_DATA[2] == \
-               venture_bond_contract.tokenContentHashes(token_id, {"from": inv})
         assert venture_bond_contract.tokenMetadataHashes(token_id, {"from": inv}) == \
-               "0x" + constants.GENERIC_NFT_DATA[3]
+               "0x" + constants.GENERIC_NFT_DATA[1]
 
 
 def test_set_nft_data_and_mint(successful_launch, accounts, deployed_factory):
@@ -46,21 +43,15 @@ def test_set_nft_data_and_mint(successful_launch, accounts, deployed_factory):
     launch_contract, usd_contract = successful_launch
     venture_bond_address = launch_contract.launchVentureBondAddress({"from": accounts[0]})
     venture_bond_contract = brownie.VentureBond.at(venture_bond_address)
-    launch_contract.setNftDataByTokenId(0, constants.SPECIAL_NFT_DATA, {'from': accounts[0]})
+    launch_contract.setNftDataByIndex(0, constants.SPECIAL_NFT_DATA, {'from': accounts[0]})
     launch_contract.claim({'from': special_investor})
     launch_contract.claim({'from': non_special_investor})
     assert venture_bond_contract.tokenURI(0, {"from": special_investor}) == constants.SPECIAL_NFT_DATA[0]
-    assert venture_bond_contract.tokenMetadataURI(0, {"from": special_investor}) == constants.SPECIAL_NFT_DATA[1]
-    assert "0x" + constants.SPECIAL_NFT_DATA[2] == \
-           venture_bond_contract.tokenContentHashes(0, {"from": special_investor})
     assert venture_bond_contract.tokenMetadataHashes(0, {"from": special_investor}) == \
-           "0x" + constants.SPECIAL_NFT_DATA[3]
+           "0x" + constants.SPECIAL_NFT_DATA[1]
     assert venture_bond_contract.tokenURI(1, {"from": special_investor}) == constants.GENERIC_NFT_DATA[0]
-    assert venture_bond_contract.tokenMetadataURI(1, {"from": special_investor}) == constants.GENERIC_NFT_DATA[1]
-    assert "0x" + constants.GENERIC_NFT_DATA[2] == \
-           venture_bond_contract.tokenContentHashes(1, {"from": special_investor})
     assert venture_bond_contract.tokenMetadataHashes(1, {"from": special_investor}) == \
-           "0x" + constants.GENERIC_NFT_DATA[3]
+           "0x" + constants.GENERIC_NFT_DATA[1]
 
 
 def test_batch_set_nft_data_and_mint(successful_launch, accounts, deployed_factory):
@@ -69,22 +60,16 @@ def test_batch_set_nft_data_and_mint(successful_launch, accounts, deployed_facto
     launch_contract, usd_contract = successful_launch
     venture_bond_address = launch_contract.launchVentureBondAddress({"from": accounts[0]})
     venture_bond_contract = brownie.VentureBond.at(venture_bond_address)
-    launch_contract.batchSetNftDataByTokenId([0, 1, 2, 3, 4], constants.BATCH_SPECIAL_NFT_DATA, {'from': accounts[0]})
+    launch_contract.batchSetNftDataByIndex([0, 1, 2, 3, 4], constants.BATCH_SPECIAL_NFT_DATA, {'from': accounts[0]})
     for n, inv in enumerate(special_investors):
         launch_contract.claim({'from': inv})
         assert venture_bond_contract.tokenURI(n, {"from": inv}) == constants.BATCH_SPECIAL_NFT_DATA[n][0]
-        assert venture_bond_contract.tokenMetadataURI(n, {"from": inv}) == constants.BATCH_SPECIAL_NFT_DATA[n][1]
-        assert "0x" + constants.BATCH_SPECIAL_NFT_DATA[n][2] == \
-               venture_bond_contract.tokenContentHashes(n, {"from": inv})
         assert venture_bond_contract.tokenMetadataHashes(n, {"from": inv}) == \
-               "0x" + constants.BATCH_SPECIAL_NFT_DATA[n][3]
+               "0x" + constants.BATCH_SPECIAL_NFT_DATA[n][1]
     launch_contract.claim({'from': non_special_investor})
     assert venture_bond_contract.tokenURI(5, {"from": non_special_investor}) == constants.GENERIC_NFT_DATA[0]
-    assert venture_bond_contract.tokenMetadataURI(5, {"from": non_special_investor}) == constants.GENERIC_NFT_DATA[1]
-    assert "0x" + constants.GENERIC_NFT_DATA[2] == \
-           venture_bond_contract.tokenContentHashes(5, {"from": non_special_investor})
     assert venture_bond_contract.tokenMetadataHashes(5, {"from": non_special_investor}) == \
-           "0x" + constants.GENERIC_NFT_DATA[3]
+           "0x" + constants.GENERIC_NFT_DATA[1]
 
 
 def test_cannot_mint_manually(successful_launch, accounts):
@@ -92,17 +77,16 @@ def test_cannot_mint_manually(successful_launch, accounts):
     venture_bond_address = launch_contract.launchVentureBondAddress({"from": accounts[0]})
     venture_bond_contract = brownie.VentureBond.at(venture_bond_address)
 
-    with brownie.reverts("VentureBond: Only launch contract"):
-        venture_bond_contract.mint([
-            "PolyNFT",
-            "PolyNFT",
-            random.randint(1, 1000000),
-            random.randint(1, 1000000),
-            constants.INITIAL_INV_TAP_RATE,
+    with brownie.reverts("VentureBond: not an Authorised launch"):
+        venture_bond_contract.mint(
+             accounts[1],
+            ["PolyNFT",
+            random.randint(1,100000)],
+            [[0e18], [90e18], [10e18]],[constants.INITIAL_INV_TAP_RATE,
             constants.END_DATE,
             999999999,
-            0],
-            [[0e18], [90e18], [10e18]], accounts[1], {"from": accounts[0]})
+            0], {"from": accounts[0]}
+            )
 
 
 '''
@@ -293,18 +277,6 @@ def test_should_not_be_able_to_remove_bid_twice(minted_launch_with_bid, accounts
 
 
 '''
-Burn Tests
-'''
-
-
-def test_should_revert_burn_even_if_owner(minted_launch_with_bid, accounts, send_any_usd_to_accounts):
-    launch_contract, venture_bond_contract = minted_launch_with_bid
-    nft_owner = accounts[1]
-    with brownie.reverts("VentureBond: owner is not creator of the VentureBond"):
-        venture_bond_contract.burn(0, {'from': nft_owner})
-
-
-'''
 Accept Bid Tests
 '''
 
@@ -388,28 +360,6 @@ Update tests
 '''
 
 
-# note: at time of writing 11/03 this value should be unchangeable, but the function is remaining open for future
-# modifications if it can be changed anywhere else then a test case has been missed and this is a bug
-
-def test_manual_token_uri_update_reverts(minted_launch, accounts):
-    investors = accounts[1:]
-    launch_contract, venture_bond_contract = minted_launch
-    for n, inv in enumerate(investors):
-        with brownie.reverts("VentureBond: Only launch contract"):
-            venture_bond_contract.updateTokenURI(n, "TROLL", inv, {'from': inv})
-
-
-# note: at time of writing 11/03 this value should be unchangeable, but the function is remaining open for future
-# modifications if it can be changed anywhere else then a test case has been missed and this is a bug
-
-def test_manual_token_metadata_update_reverts(minted_launch, accounts):
-    investors = accounts[1:]
-    launch_contract, venture_bond_contract = minted_launch
-    for n, inv in enumerate(investors):
-        with brownie.reverts("VentureBond: Only launch contract"):
-            venture_bond_contract.updateTokenMetadataURI(n, "TROLL", inv, {'from': inv})
-
-
 # note: it is VITAL, this should only be changed via increaseTap in BasicLaunch, if it can be changed
 # anywhere else then a test case has been missed and this is a bug
 
@@ -417,7 +367,7 @@ def test_manual_tap_update_reverts(minted_launch, accounts):
     investors = accounts[1:]
     launch_contract, venture_bond_contract = minted_launch
     for n, inv in enumerate(investors):
-        with brownie.reverts("VentureBond: Only launch contract"):
+        with brownie.reverts("VentureBond: not an Authorised launch"):
             venture_bond_contract.updateTapRate(n, 999999, inv, {'from': inv})
 
 
@@ -428,7 +378,7 @@ def test_manual_last_withdrawn_time_update_reverts(minted_launch, accounts):
     investors = accounts[1:]
     launch_contract, venture_bond_contract = minted_launch
     for n, inv in enumerate(investors):
-        with brownie.reverts("VentureBond: Only launch contract"):
+        with brownie.reverts("VentureBond: not an Authorised launch"):
             venture_bond_contract.updateLastWithdrawnTime(n, 1, inv, {'from': inv})
 
 
@@ -439,7 +389,7 @@ def test_manual_tappable_balance_update_reverts(minted_launch, accounts):
     investors = accounts[1:]
     launch_contract, venture_bond_contract = minted_launch
     for n, inv in enumerate(investors):
-        with brownie.reverts("VentureBond: Only launch contract"):
+        with brownie.reverts("VentureBond: not an Authorised launch"):
             venture_bond_contract.updateTappableBalance(n, 1, inv, {'from': inv})
 
 
@@ -450,8 +400,7 @@ def test_manual_voting_power_update_reverts(minted_launch, accounts):
     investors = accounts[1:]
     launch_contract, venture_bond_contract = minted_launch
     for n, inv in enumerate(investors):
-        with brownie.reverts("VentureBond: Only launch contract"):
+        with brownie.reverts("VentureBond: not an Authorised launch"):
             venture_bond_contract.updateVotingPower(n, 9999999, inv, {'from': inv})
-# TODO
-#
-# def tests_related_to_content_hash_etc_tbd
+
+

@@ -16,8 +16,8 @@ import {IMarket} from "../../interfaces/IMarket.sol";
 import "../../interfaces/IVentureBond.sol";
 
 /**
- * @title A media value system, with perpetual equity to creators
- * @notice This contract provides an interface to mint media with a market
+ * @title The Polylaunch VentureBond NFT contract, loosely inspired by the Zora Protocol
+ * @notice This contract provides an interface to mint ventureBond with a market
  * owned by the creator.
  */
 contract VentureBond is ERC721, IVentureBond, ReentrancyGuard {
@@ -50,7 +50,7 @@ contract VentureBond is ERC721, IVentureBond, ReentrancyGuard {
     // Mapping from token id to sha256 hash of metadata
     mapping(uint256 => bytes32) public tokenMetadataHashes;
 
-    // Mapping from token id to venture bond parameters
+    // Mapping from token id to venture bond parameters, see IVentureBond
     mapping(uint256 => VentureBondParams) public tokenVentureBondParams;
 
     // Mapping to track launches that are allowed to mint venture bonds
@@ -67,7 +67,7 @@ contract VentureBond is ERC721, IVentureBond, ReentrancyGuard {
      * @notice Require that the token has not been burned and has been minted
      */
     modifier onlyExistingToken(uint256 tokenId) {
-        require(_exists(tokenId), "Media: nonexistent token");
+        require(_exists(tokenId), "VentureBond: nonexistent token");
         _;
     }
 
@@ -78,7 +78,7 @@ contract VentureBond is ERC721, IVentureBond, ReentrancyGuard {
     modifier onlyTokenWithMetadataHash(uint256 tokenId) {
         require(
             tokenMetadataHashes[tokenId] != 0,
-            "Media: token does not have hash of its metadata"
+            "VentureBond: token does not have hash of its metadata"
         );
         _;
     }
@@ -96,7 +96,7 @@ contract VentureBond is ERC721, IVentureBond, ReentrancyGuard {
     }
 
     /**
-     * @notice Require that the sender is the factory
+     * @notice Require that the sender is a launch 
      */
     modifier onlyAuthorised() {
         require(
@@ -106,6 +106,9 @@ contract VentureBond is ERC721, IVentureBond, ReentrancyGuard {
         _;
     }
 
+    /**
+     * @notice Require that the tokenId being used for the transaction is associated with the launch.
+     */
     modifier onlyAssociatedToken(uint256 tokenId) {
         require(
             tokenAssociatedLaunch[tokenId] == msg.sender,
@@ -117,12 +120,12 @@ contract VentureBond is ERC721, IVentureBond, ReentrancyGuard {
 
     /**
      * @notice Ensure that the provided spender is the approved or the owner of
-     * the media for the specified tokenId
+     * the ventureBond for the specified tokenId
      */
     modifier onlyApprovedOrOwner(address spender, uint256 tokenId) {
         require(
             _isApprovedOrOwner(spender, tokenId),
-            "Media: Only approved or owner"
+            "VentureBond: Only approved or owner"
         );
         _;
     }
@@ -133,7 +136,7 @@ contract VentureBond is ERC721, IVentureBond, ReentrancyGuard {
     modifier onlyTokenCreated(uint256 tokenId) {
         require(
             tokenIdTracker.current() > tokenId,
-            "Media: token with that id does not exist"
+            "VentureBond: token with that id does not exist"
         );
         _;
     }
@@ -144,7 +147,7 @@ contract VentureBond is ERC721, IVentureBond, ReentrancyGuard {
     modifier onlyValidURI(string memory uri) {
         require(
             bytes(uri).length != 0,
-            "Media: specified uri must be non-empty"
+            "VentureBond: specified uri must be non-empty"
         );
         _;
     }
@@ -236,7 +239,7 @@ contract VentureBond is ERC721, IVentureBond, ReentrancyGuard {
      */
 
     /**
-     * @notice see IMedia
+     * @notice see IVentureBond
      */
     function mint(
         address owner, 
@@ -252,7 +255,9 @@ contract VentureBond is ERC721, IVentureBond, ReentrancyGuard {
         _mintForCreator(owner, data, bidShares, ventureBondParams);
     }
 
-
+    /**
+     * @notice see IVentureBond
+     */
     function authoriseLaunch(address launch) external override onlyFactory {
         isAuthorisedLaunch[launch] = true;
     }
@@ -263,19 +268,19 @@ contract VentureBond is ERC721, IVentureBond, ReentrancyGuard {
      */
 
     /**
-     * @notice see IMedia
+     * @notice see IVentureBond
      */
     function auctionTransfer(uint256 tokenId, address recipient)
         external
         override
     {
-        require(msg.sender == marketContract, "Media: only market contract");
+        require(msg.sender == marketContract, "VentureBond: only market contract");
         previousTokenOwners[tokenId] = ownerOf(tokenId);
         _safeTransfer(ownerOf(tokenId), recipient, tokenId, "");
     }
 
     /**
-     * @notice see IMedia
+     * @notice see IVentureBond
      */
     function setAsk(uint256 tokenId, IMarket.Ask memory ask)
         public
@@ -287,7 +292,7 @@ contract VentureBond is ERC721, IVentureBond, ReentrancyGuard {
     }
 
     /**
-     * @notice see IMedia
+     * @notice see IVentureBond
      */
     function removeAsk(uint256 tokenId)
         external
@@ -299,7 +304,7 @@ contract VentureBond is ERC721, IVentureBond, ReentrancyGuard {
     }
 
     /**
-     * @notice see IMedia
+     * @notice see IVentureBond
      */
     function setBid(uint256 tokenId, IMarket.Bid memory bid)
         public
@@ -312,7 +317,7 @@ contract VentureBond is ERC721, IVentureBond, ReentrancyGuard {
     }
 
     /**
-     * @notice see IMedia
+     * @notice see IVentureBond
      */
     function removeBid(uint256 tokenId)
         external
@@ -324,7 +329,7 @@ contract VentureBond is ERC721, IVentureBond, ReentrancyGuard {
     }
 
     /**
-     * @notice see IMedia
+     * @notice see IVentureBond
      */
     function acceptBid(uint256 tokenId, IMarket.Bid memory bid)
         public
@@ -426,10 +431,8 @@ contract VentureBond is ERC721, IVentureBond, ReentrancyGuard {
      * On mint, also set the sha256 hashes of the content and its metadata for integrity
      * checks, along with the initial URIs to point to the content and metadata. Attribute
      * the token ID to the creator, mark the content hash as used, and set the bid shares for
-     * the media's market.
+     * the ventureBond's market.
      *
-     * Note that although the content hash must be unique for future mints to prevent duplicate media,
-     * metadata has no such requirement.
      */
     function _mintForCreator(
         address creator,
@@ -439,7 +442,7 @@ contract VentureBond is ERC721, IVentureBond, ReentrancyGuard {
     ) internal onlyValidURI(data.tokenURI){
         require(
             data.metadataHash != 0,
-            "Media: metadata hash must be non-zero"
+            "VentureBond: metadata hash must be non-zero"
         );
 
         uint256 tokenId = tokenIdTracker.current();
@@ -452,8 +455,9 @@ contract VentureBond is ERC721, IVentureBond, ReentrancyGuard {
         tokenAssociatedLaunch[tokenId] = msg.sender;
 
         tokenCreators[tokenId] = systemContract;
-        previousTokenOwners[tokenId] = creator;
+        previousTokenOwners[tokenId] = systemContract;
         IMarket(marketContract).setBidShares(tokenId, bidShares);
+        emit TokenMinted(tokenId, creator);
     }
 
 

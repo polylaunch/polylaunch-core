@@ -6,7 +6,7 @@ pragma experimental ABIEncoderV2;
 import {IMarket} from "./IMarket.sol";
 
 /**
- * @title Interface for Zora Protocol's Media
+ * @title Interface for A VentureBond
  */
 interface IVentureBond {
 
@@ -25,8 +25,10 @@ interface IVentureBond {
         uint256 votingPower;
     }
     
+    event TokenMinted(uint256 tokenId, address owner);
+
     /**
-     * @notice Mint new media for msg.sender.
+     * @notice Mint new ventureBond for msg.sender.
      */
     function mint(
         address owner, 
@@ -44,22 +46,22 @@ interface IVentureBond {
     function auctionTransfer(uint256 tokenId, address recipient) external;
 
     /**
-     * @notice Set the ask on a piece of media
+     * @notice Set the ask on a ventureBond
      */
     function setAsk(uint256 tokenId, IMarket.Ask calldata ask) external;
 
     /**
-     * @notice Remove the ask on a piece of media
+     * @notice Remove the ask on a ventureBond
      */
     function removeAsk(uint256 tokenId) external;
 
     /**
-     * @notice Set the bid on a piece of media
+     * @notice Set the bid on a ventureBond
      */
     function setBid(uint256 tokenId, IMarket.Bid calldata bid) external;
 
     /**
-     * @notice Remove the bid on a piece of media
+     * @notice Remove the bid on a ventureBond
      */
     function removeBid(uint256 tokenId) external;
 
@@ -117,7 +119,13 @@ interface IVentureBond {
      */
     function updateVotingPower(uint256 tokenId, uint256 _votingPower, address _owner) external;
 
+    /**
+     * @notice Authorise a launch to be able to interact with the VentureBond contract, i.e. minting, updating parameters etc.
+     */
     function authoriseLaunch(address launch) external;
 
+    /**
+     * @notice Check which launch the provided tokenId is associated with
+     */
     function launchAddressAssociatedWithToken(uint256 tokenId) external view returns (address);
 }

@@ -12,7 +12,7 @@ import {VentureBond} from "./VentureBond.sol";
 import {IMarket} from "../../interfaces/IMarket.sol";
 
 /**
- * @title A Market for Venture Bonds
+ * @title A Market for Venture Bonds, fork of the Zora Protocol's Market
  * @notice This contract contains all of the market logic for VentureBond
  */
 contract Market is IMarket {

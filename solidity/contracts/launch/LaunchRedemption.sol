@@ -164,6 +164,7 @@ library LaunchRedemption {
      * @notice Claim function for an supporter to either claim and mint their NFT for a successful launch or
      * retrieve their DAI after a failed launch
      * @param self Data struct associated with the launch
+     * @param register Register struct associated with the launch
      */
     function claim(
         LaunchUtils.Data storage self,
@@ -197,10 +198,15 @@ library LaunchRedemption {
             );
         }
     }
+    
+    // TODO
+    // GAS OPTIMISATIONS ON THIS FUNCTION
+    //
 
     /**
      * @notice Mints a Venture Bond token for the msg.sender, the tokenURI and metadataURI will need to be fixed later on
      * @param self Data struct associated with the launch
+     * @param register Register struct associated with the launch
      */
     function _claimVentureBond(
         LaunchUtils.Data storage self,

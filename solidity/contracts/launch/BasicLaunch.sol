@@ -354,7 +354,7 @@ contract BasicLaunch is PolyVault, ReentrancyGuard {
     }
 
     /**
-     * @notice Getter for data registry basic nft data by tokenId
+     * @notice Getter for data registry basic nft data by index, this data will represent the ith nft minted
      * @param i index to check
      */
     function getNftDataByIndex(uint256 i)
@@ -365,8 +365,8 @@ contract BasicLaunch is PolyVault, ReentrancyGuard {
     }
 
     /**
-     * @notice Setter for data registry basic nft data by tokenId
-     * @param i id of the token to associate with given nftData
+     * @notice Setter for data registry basic nft data by index, this data will represent the ith nft minted
+     * @param i index to associate with given nftData
      * @param _nftData BaseNFTData struct that will be used when minting the nft with the associated tokenId
      */
     function setNftDataByIndex(
@@ -377,9 +377,9 @@ contract BasicLaunch is PolyVault, ReentrancyGuard {
     }
 
     /**
-     * @notice Batch setter for data registry basic nft data by tokenId
-     * @param i_s list of token ids to be associated with corresponding baseNftData structs in _nftData array
-     * @param _nftData list holding BaseNFTData structs to be assigned to the corresponding tokenId
+     * @notice Batch setter for data registry basic nft data by index, this data will represent the ith nft minted
+     * @param i_s list of indexes to be associated with corresponding baseNftData structs in _nftData array
+     * @param _nftData list holding MediaData structs to be assigned to the corresponding tokenId
      */
     function batchSetNftDataByIndex(
         uint256[] memory i_s,

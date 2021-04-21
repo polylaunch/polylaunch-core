@@ -31,8 +31,8 @@ def launch_with_active_tap_increase_proposal(request, successful_launch, account
         )
     elif request.param == "REFUND":
         tx = governor.proposeRefund(
-            "Want a refund because reasons",
-            {"from": accounts[0]},
+            "Want a refund because reasons", 0,
+            {"from": accounts[1]},
         )
 
     brownie.chain.mine(2)
@@ -108,8 +108,8 @@ def test_propose_tap_increase_by_owner(successful_launch, accounts):
 def test_propose_refund_as_owner(successful_launch, accounts):
     launch, _ = successful_launch
     governor = get_governor(launch, accounts[0])
-
-    tx = governor.proposeRefund("Want a refund because reasons", {"from": accounts[0]})
+    launch.claim({"from": accounts[1]})
+    tx = governor.proposeRefund("Want a refund because reasons",0, {"from": accounts[0]})
 
     assert "RefundProposalCreated" in tx.events
     assert tx.events["RefundProposalCreated"]["id"] == tx.return_value
@@ -122,11 +122,11 @@ def test_propose_refund_as_owner(successful_launch, accounts):
 def test_propose_refund_as_non_NFT_holder_reverts(successful_launch, accounts):
     launch, _ = successful_launch
     governor = get_governor(launch, accounts[0])
-
+    launch.claim({"from": accounts[1]})
     with brownie.reverts(
         "LaunchGovernor::proposeRefund: Must be launcher or hold a venture bond to propose a refund"
     ):
-        governor.proposeRefund("Want a refund because reasons", {"from": accounts[1]})
+        governor.proposeRefund("Want a refund because reasons", 0, {"from": accounts[2]})
 
 
 def test_propose_refund_as_NFT_holder_succeeds(
@@ -134,7 +134,7 @@ def test_propose_refund_as_NFT_holder_succeeds(
 ):
     launch, governor = launch_where_investors_have_claimed_NFT
 
-    tx = governor.proposeRefund("Want a refund because reasons", {"from": accounts[1]})
+    tx = governor.proposeRefund("Want a refund because reasons", 0, {"from": accounts[1]})
 
     assert "RefundProposalCreated" in tx.events
     assert tx.events["RefundProposalCreated"]["id"] == tx.return_value

@@ -38,10 +38,10 @@ library VentureBondDataRegistry {
     );
 
     /**
-     * @notice get the nft URIs and hashes of a token by ID
+     * @notice get the nft URI and hash of a token by index
      * @param self Data struct associated with the launch
-     * @param i index of the token which data is to be checked
-     * @return a MediaData struct containing the stored NFT URIs and hashes for that given token
+     * @param i index of which data is to be checked
+     * @return a MediaData struct containing the stored NFT URI and hash for that given index
      */
     function getNftDataByIndex(Register storage self, uint256 i)
         public
@@ -51,10 +51,10 @@ library VentureBondDataRegistry {
     }
 
     /**
-     * @notice set the NFT URIs and hashes of a tokenId
+     * @notice set the NFT URI and hash of an index
      * @param self Data struct associated with the launch
-     * @param i index of the token to assign the nft data
-     * @param _nftData MediaData struct containing the data for the tokenId
+     * @param i index to assign the nft data
+     * @param _nftData MediaData struct containing the data for the index
      */
     function setNftDataByIndex(
         Register storage self,
@@ -71,12 +71,12 @@ library VentureBondDataRegistry {
     }
 
     /**
-     * @notice set the NFT URIs and hashes of multiple tokenIds at once
+     * @notice set the NFT URI and hash of multiple indexes at once
      * @param self Data struct associated with the launch
-     * @param i_s list of indexes of tokens to be set, the indexes of the tokenId and its data in _nftData
+     * @param i_s list of indexes of tokens to be set, the index and its data in _nftData
      * must correspond
-     * @param _nftData array of MediaData structs storing the nft data for the tokenId in the corresponding
-     * index of tokenIds
+     * @param _nftData array of MediaData structs storing the nft data for the index in the corresponding
+     * index of indexes
      */
     function batchSetNftDataByIndex(
         Register storage self,

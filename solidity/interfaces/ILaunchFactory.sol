@@ -34,10 +34,6 @@ interface ILaunchFactory {
         uint256 _individualFundingCap;
         // the fixed swap rate of the sale DAI/TOKEN (e.g. for 100 tokens for one dai, the value should be 100e18)
         uint256 _fixedSwapRate;
-        // desired name of the NFT associated with the launch
-        string _nftName;
-        // desired symbol of the NFT associated with the launch
-        string _nftSymbol;
         // generic data for an NFT
         IVentureBond.MediaData _genericNftData;
     }

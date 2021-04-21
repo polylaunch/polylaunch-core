@@ -21,8 +21,6 @@ def test_create_basic_launch(mint_dummy_token, deployed_factory, accounts):
             constants.FUNDING_CAP,
             constants.INDIVIDUAL_FUNDING_CAP,
             constants.FIXED_SWAP_RATE,
-            constants.NFT_NAME,
-            constants.NFT_SYMBOL,
             constants.GENERIC_NFT_DATA
         ],
         {"from": accounts[0]},
@@ -56,8 +54,6 @@ def test_create_basic_launch_fails_with_bad_nft_data(mint_dummy_token, deployed_
                     constants.FUNDING_CAP,
                     constants.INDIVIDUAL_FUNDING_CAP,
                     constants.FIXED_SWAP_RATE,
-                    constants.NFT_NAME,
-                    constants.NFT_SYMBOL,
                     nftData
                 ],
                 {"from": accounts[0]},
@@ -67,9 +63,9 @@ def test_setting_bad_nft_data_should_fail(running_launch, accounts):
     # various different error conditions, them all failing is ok, as the variables are independent
     for nftData in constants.FAILURE_NFT_DATA:
         with brownie.reverts():
-            running_launch.setNftDataByTokenId(0, nftData, {'from': accounts[0]})
+            running_launch.setNftDataByIndex(0, nftData, {'from': accounts[0]})
     with brownie.reverts():
-        running_launch.batchSetNftDataByTokenId([0, 1, 2, 3, 4, 5], constants.FAILURE_NFT_DATA, {'from': accounts[0]})
+        running_launch.batchSetNftDataByIndex([0, 1, 2, 3, 4, 5], constants.FAILURE_NFT_DATA, {'from': accounts[0]})
 
 
 def test_receive_usd_during_offering(running_launch, send_1000_usd_to_accounts, accounts):
@@ -181,7 +177,7 @@ def test_investors_claim_nft_after_successful_launch(
     for n, inv in enumerate(investors):
         tx = launch_contract.claim({"from": inv})
         assert "TokenMinted" in tx.events
-        token_id = tx.events["TokenMinted"]["_tokenId"]
+        token_id = tx.events["TokenMinted"]["tokenId"]
         assert token_id == n
         assert venture_bond_contract.balanceOf(inv, {"from": inv}) == 1
         assert venture_bond_contract.ownerOf(token_id, {"from": inv}) == inv
@@ -230,8 +226,8 @@ def test_investors_tap_nft_after_claiming(successful_launch, accounts):
     brownie.chain.sleep(100)
     for n, inv in enumerate(investors):
         for trans in tx:
-            if trans.events["TokenMinted"]["_owner"] == inv:
-                token_id = trans.events["TokenMinted"]["_tokenId"]
+            if trans.events["TokenMinted"]["owner"] == inv:
+                token_id = trans.events["TokenMinted"]["tokenId"]
 
         old_tappable_balance = venture_bond_contract.tappableBalance(
             token_id, {"from": inv}
@@ -268,8 +264,8 @@ def test_investors_tap_nft_after_long_time(successful_launch, accounts):
     brownie.chain.sleep(100000000)
     for n, inv in enumerate(investors):
         for trans in tx:
-            if trans.events["TokenMinted"]["_owner"] == inv:
-                token_id = trans.events["TokenMinted"]["_tokenId"]
+            if trans.events["TokenMinted"]["owner"] == inv:
+                token_id = trans.events["TokenMinted"]["tokenId"]
 
         old_tappable_balance = venture_bond_contract.tappableBalance(
             token_id, {"from": inv}
@@ -327,8 +323,8 @@ def test_launcher_withdraw_unsold_tokens_succeeds(running_launch, accounts, send
     
     for n, inv in enumerate(investors):
         for trans in tx:
-            if trans.events["TokenMinted"]["_owner"] == inv:
-                token_id = trans.events["TokenMinted"]["_tokenId"]
+            if trans.events["TokenMinted"]["owner"] == inv:
+                token_id = trans.events["TokenMinted"]["tokenId"]
 
         old_tappable_balance = venture_bond_contract.tappableBalance(
             token_id, {"from": inv}

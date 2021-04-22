@@ -3,6 +3,24 @@ import time
 import constants
 import pytest
 
+def test_alt_launch(minted_launch, alt_launch_minted, accounts):
+    alt_launch, usd, nft = alt_launch_minted
+    launch, _ = minted_launch
+    nft_main_id = 0
+    nft_alt_id = 9
+    assert nft.ownerOf(nft_main_id) == accounts[1]
+    assert nft.ownerOf(nft_alt_id) == accounts[1]
+    assert nft.launchAddressAssociatedWithToken(nft_main_id) == launch.address
+    assert nft.launchAddressAssociatedWithToken(nft_alt_id) == alt_launch.address
+    with brownie.reverts("supporterTap: ventureBond not associated with this launch"):
+        launch.supporterTap(nft_alt_id,{"from": accounts[1]})
+        alt_launch.supporterTap(nft_main_id, {"from": accounts[1]})
+    with brownie.reverts("Not your ventureBond"):
+        launch.supporterTap(nft_main_id, {"from": accounts[2]})
+        alt_launch.supporterTap(nft_alt_id, {"from": accounts[2]})
+    assert launch.supporterTap(nft_main_id, {"from": accounts[1]})
+    assert alt_launch.supporterTap(nft_alt_id, {"from": accounts[1]})
+
 
 def test_create_basic_launch(mint_dummy_token, deployed_factory, accounts):
     mint_dummy_token.approve(
@@ -65,7 +83,36 @@ def test_setting_bad_nft_data_should_fail(running_launch, accounts):
         with brownie.reverts():
             running_launch.setNftDataByIndex(0, nftData, {'from': accounts[0]})
     with brownie.reverts():
-        running_launch.batchSetNftDataByIndex([0, 1, 2, 3, 4, 5], constants.FAILURE_NFT_DATA, {'from': accounts[0]})
+        running_launch.batchSetNftDataByIndex([0, 1, 2], constants.FAILURE_NFT_DATA, {'from': accounts[0]})
+
+
+def test_receive_usd_from_same_twice(running_launch, send_1000_usd_to_accounts, accounts):
+    usd_contract = send_1000_usd_to_accounts
+    investors = accounts[1:4]
+    start_time = running_launch.launchStartTime({"from": accounts[1]})
+    end_time = running_launch.launchEndTime({"from": accounts[1]})
+
+    start_delta = start_time - time.time() + 1
+    brownie.chain.sleep(start_delta)
+    running_launch.batchSetNftDataByIndex([0,1,2,3,4], constants.BATCH_SPECIAL_NFT_DATA,{'from': accounts[0]})
+    delta = int((end_time - start_time))
+    usd_contract.increaseAllowance(running_launch, 500e18, {"from": accounts[1]})
+    running_launch.sendUSD(500e18, {"from": accounts[1]})
+    for inv in investors:
+        usd_contract.increaseAllowance(running_launch, 500e18, {"from": inv})
+        running_launch.sendUSD(500e18, {"from": inv})
+    brownie.chain.sleep(delta)
+    assert running_launch.fundsProvidedByAddress(accounts[1]) == 1000e18
+    venture_bond_address = running_launch.launchVentureBondAddress({"from": accounts[0]})
+    nft = brownie.VentureBond.at(venture_bond_address)
+    for inv in investors:
+        running_launch.claim({"from": inv})
+    for n, inv in enumerate(investors):
+    
+        assert nft.ownerOf(n) == inv
+        assert nft.tokenURI(n, {"from": inv}) == constants.BATCH_SPECIAL_NFT_DATA[n][0]
+        assert nft.tokenMetadataHashes(n, {"from": inv}) == \
+               "0x" + constants.BATCH_SPECIAL_NFT_DATA[n][1]
 
 
 def test_receive_usd_during_offering(running_launch, send_1000_usd_to_accounts, accounts):

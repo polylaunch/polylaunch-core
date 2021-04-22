@@ -186,8 +186,11 @@ contract BasicLaunch is PolyVault, ReentrancyGuard {
             self.USD.transferFrom(msg.sender, address(this), amount),
             "Token transfer failed"
         );
-        register.supporterIndex[msg.sender] = register.supporterTracker.current();
-        register.supporterTracker.increment();
+        if (self.provided[msg.sender] == 0){
+            register.supporterIndex[msg.sender] = register.supporterTracker.current();
+            register.supporterTracker.increment();
+        }
+
         self.totalFunding += amount;
         self.provided[msg.sender] += amount;
 

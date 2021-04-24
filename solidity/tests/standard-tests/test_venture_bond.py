@@ -82,7 +82,7 @@ def test_cannot_mint_manually(successful_launch, accounts):
              accounts[1],
             ["PolyNFT",
             random.randint(1,100000)],
-            [[0e18], [90e18], [10e18]],[constants.INITIAL_INV_TAP_RATE,
+            [constants.INITIAL_INV_TAP_RATE,
             constants.END_DATE,
             999999999,
             0], {"from": accounts[0]}

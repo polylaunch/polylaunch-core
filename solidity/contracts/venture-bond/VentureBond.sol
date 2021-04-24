@@ -244,7 +244,6 @@ contract VentureBond is ERC721, IVentureBond, ReentrancyGuard {
     function mint(
         address owner, 
         MediaData memory data, 
-        IMarket.BidShares memory bidShares, 
         VentureBondParams memory ventureBondParams
         )
         public
@@ -252,7 +251,7 @@ contract VentureBond is ERC721, IVentureBond, ReentrancyGuard {
         nonReentrant
         onlyAuthorised
     {
-        _mintForCreator(owner, data, bidShares, ventureBondParams);
+        _mintForCreator(owner, data, ventureBondParams);
     }
 
     /**
@@ -437,7 +436,6 @@ contract VentureBond is ERC721, IVentureBond, ReentrancyGuard {
     function _mintForCreator(
         address creator,
         MediaData memory data,
-        IMarket.BidShares memory bidShares,
         VentureBondParams memory ventureBondParams
     ) internal onlyValidURI(data.tokenURI){
         require(
@@ -456,7 +454,6 @@ contract VentureBond is ERC721, IVentureBond, ReentrancyGuard {
 
         tokenCreators[tokenId] = systemContract;
         previousTokenOwners[tokenId] = systemContract;
-        IMarket(marketContract).setBidShares(tokenId, bidShares);
         emit TokenMinted(tokenId, creator);
     }
 

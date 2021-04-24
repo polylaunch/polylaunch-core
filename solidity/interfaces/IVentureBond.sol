@@ -33,7 +33,6 @@ interface IVentureBond {
     function mint(
         address owner, 
         MediaData calldata data, 
-        IMarket.BidShares calldata bidShares, 
         VentureBondParams calldata ventureBondParams
         )
         external;

@@ -38,6 +38,9 @@ contract Market is IMarket {
     // Mapping from token to the current ask for the token
     mapping(uint256 => Ask) private _tokenAsks;
 
+    // defaultBidShares for all tokens that have not been previously sold
+    BidShares private defaultBidShares;
+
     /* *********
      * Modifiers
      * *********
@@ -79,7 +82,21 @@ contract Market is IMarket {
         override
         returns (BidShares memory)
     {
-        return _bidShares[tokenId];
+        if (isValidBidShares(_bidShares[tokenId])){
+            return _bidShares[tokenId];
+        }else{
+            return defaultBidShares;
+        }
+        
+    }
+
+    function updateDefaultBidShares(BidShares calldata _defaultBidShares) external{
+        require(msg.sender == _owner, "Only the owner can update the defaultBidShares");
+        require(
+            isValidBidShares(_defaultBidShares),
+            "Market: Invalid bid shares, must sum to 100"
+        );
+        defaultBidShares =_defaultBidShares;
     }
 
     /**
@@ -140,8 +157,10 @@ contract Market is IMarket {
      * ****************
      */
 
-    constructor() public {
+    constructor(BidShares memory _defaultBidShares) public {
         _owner = msg.sender;
+        defaultBidShares = _defaultBidShares;
+
     }
 
     /**
@@ -212,7 +231,7 @@ contract Market is IMarket {
         Bid memory bid,
         address spender
     ) public override onlyVentureBondCaller {
-        BidShares memory bidShares = _bidShares[tokenId];
+        BidShares memory bidShares = bidSharesForToken(tokenId);
         require(
             bidShares.creator.value.add(bid.sellOnShare.value) <=
                 uint256(100).mul(Decimal.BASE),
@@ -325,6 +344,9 @@ contract Market is IMarket {
      */
     function _finalizeNFTTransfer(uint256 tokenId, address bidder) private {
         Bid memory bid = _tokenBidders[tokenId][bidder];
+        if (!isValidBidShares(_bidShares[tokenId])){
+                setBidShares(tokenId, defaultBidShares);
+            }
         BidShares storage bidShares = _bidShares[tokenId];
 
         IERC20 token = IERC20(bid.currency);

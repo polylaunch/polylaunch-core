@@ -198,10 +198,7 @@ library LaunchRedemption {
             );
         }
     }
-    
-    // TODO
-    // GAS OPTIMISATIONS ON THIS FUNCTION
-    //
+
 
     /**
      * @notice Mints a Venture Bond token for the msg.sender, the tokenURI and metadataURI will need to be fixed later on
@@ -212,11 +209,8 @@ library LaunchRedemption {
         LaunchUtils.Data storage self,
         VentureBondDataRegistry.Register storage register
     ) private {
-        require(
-            !self.nftRedeemed[msg.sender],
-            "Venture Bond already claimed"
-        );
         uint256 userProvided = self.provided[msg.sender];
+        
         uint256 tokenAmount =
             (userProvided.mul(self.FIXED_SWAP_RATE)).div(1e18);
         self.totalVotingPower += tokenAmount;
@@ -236,19 +230,9 @@ library LaunchRedemption {
                 tappableBalance: tokenAmount,
                 votingPower: tokenAmount
             });
-
-        uint256 prevOwner = PolylaunchConstants.getPrevOwner();
-        uint256 creator = PolylaunchConstants.getCreator();
-        uint256 owner = PolylaunchConstants.getOwner();
-
-        IMarket.BidShares memory shares =
-            IMarket.BidShares({
-                prevOwner: Decimal.D256(prevOwner),
-                creator: Decimal.D256(creator),
-                owner: Decimal.D256(owner)
-            });
-        self.nftRedeemed[msg.sender] = true;
+        delete self.provided[msg.sender];
+        delete register.nftData[i];
         register.isIndexMinted[i] = true;
-        IVentureBond(self.ventureBondAddress).mint(msg.sender, _nftData, shares, vbParams);
+        IVentureBond(self.ventureBondAddress).mint(msg.sender, _nftData, vbParams);
     }
 }

@@ -75,8 +75,6 @@ library LaunchUtils {
         address governor;
         // Total voting power available in the launch
         uint256 totalVotingPower;
-        // mapping for whether an address has redeemed their NFT or not
-        mapping(address => bool) nftRedeemed;
         // generic nft Data
         IVentureBond.MediaData genericNftData;
         // is yield on launcher funds activated

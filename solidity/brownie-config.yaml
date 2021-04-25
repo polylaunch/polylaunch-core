@@ -1,6 +1,12 @@
 compiler:
   solc:
     remappings:
-      - '@openzeppelin=OpenZeppelin/openzeppelin-contracts@3.3.0'
+      - "@openzeppelin=OpenZeppelin/openzeppelin-contracts@3.3.0"
 dependencies:
   - OpenZeppelin/openzeppelin-contracts@3.3.0
+dev_deployment_artifacts: true
+networks:
+  development:
+    cmd_settings:
+      unlock:
+        - 0x3f5ce5fbfe3e9af3971dd833d26ba9b5c936f0be # binance account for easy access to tokens

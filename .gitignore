@@ -2,3 +2,7 @@ solidity/build/
 solidity/tests/mainnet-fork-tests/__pycache__/
 solidity/tests/standard-tests/__pycache__/
 solidity/reports/
+.vscode/*
+__pycache__/
+*.py[cod]
+*$py.class

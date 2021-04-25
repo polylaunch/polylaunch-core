@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0
+
 pragma solidity 0.7.4;
 pragma experimental ABIEncoderV2;
 
@@ -6,11 +8,11 @@ import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import {Decimal} from "../Decimal.sol";
-import {VentureBond} from "../venture-nft/VentureBond.sol";
+import {VentureBond} from "./VentureBond.sol";
 import {IMarket} from "../../interfaces/IMarket.sol";
 
 /**
- * @title A Market for a VentureBond
+ * @title A Market for Venture Bonds, fork of the Zora Protocol's Market
  * @notice This contract contains all of the market logic for VentureBond
  */
 contract Market is IMarket {
@@ -21,10 +23,9 @@ contract Market is IMarket {
      * Globals
      * *******
      */
-    // Address of the VentureBond contract that can call this market
+    // Address of the ventureBond contract that can call this market
     address public ventureBondContract;
-    // Boolean to determine whether the ownership of this contract has been set, and therefore is configurable.
-    bool public ownershipSet;
+
     // Deployment Address
     address private _owner;
 
@@ -37,19 +38,19 @@ contract Market is IMarket {
     // Mapping from token to the current ask for the token
     mapping(uint256 => Ask) private _tokenAsks;
 
+    // defaultBidShares for all tokens that have not been previously sold
+    BidShares private defaultBidShares;
+
     /* *********
      * Modifiers
      * *********
      */
 
     /**
-     * @notice require that the msg.sender is the configured VentureBond contract
+     * @notice require that the msg.sender is the configured ventureBond contract
      */
     modifier onlyVentureBondCaller() {
-        require(
-            ventureBondContract == msg.sender,
-            "Market: Only VentureBond contract"
-        );
+        require(ventureBondContract == msg.sender, "Market: Only ventureBond contract");
         _;
     }
 
@@ -81,7 +82,21 @@ contract Market is IMarket {
         override
         returns (BidShares memory)
     {
-        return _bidShares[tokenId];
+        if (isValidBidShares(_bidShares[tokenId])){
+            return _bidShares[tokenId];
+        }else{
+            return defaultBidShares;
+        }
+        
+    }
+
+    function updateDefaultBidShares(BidShares calldata _defaultBidShares) external{
+        require(msg.sender == _owner, "Only the owner can update the defaultBidShares");
+        require(
+            isValidBidShares(_defaultBidShares),
+            "Market: Invalid bid shares, must sum to 100"
+        );
+        defaultBidShares =_defaultBidShares;
     }
 
     /**
@@ -126,7 +141,7 @@ contract Market is IMarket {
 
     /**
      * @notice return a % of the specified amount. This function is used to split a bid into shares
-     * for a VentureBond's shareholders.
+     * for a ventureBond's shareholders.
      */
     function splitShare(Decimal.D256 memory sharePercentage, uint256 amount)
         public
@@ -142,31 +157,25 @@ contract Market is IMarket {
      * ****************
      */
 
-    /**
-     * @notice Sets the contract owner. This address is the only permitted address that
-     * can configure the contract and the factory address. This method can only be called once.
-     */
-    function setOwnership(address _newOwner) public {
-        require(!ownershipSet, "This function should only be called once.");
-        require(_newOwner != address(0), "Owner cannot be the zero address.");
+    constructor(BidShares memory _defaultBidShares) public {
+        _owner = msg.sender;
+        defaultBidShares = _defaultBidShares;
 
-        _owner = _newOwner;
-        ownershipSet = true;
     }
 
     /**
-     * @notice Sets the VentureBond contract address. This address is the only permitted address that
+     * @notice Sets the ventureBond contract address. This address is the only permitted address that
      * can call the mutable functions. This method can only be called once.
      */
-    function configure(address ventureBondAddress) external override {
+    function configure(address ventureBondContractAddress) external override {
         require(msg.sender == _owner, "Market: Only owner");
         require(ventureBondContract == address(0), "Market: Already configured");
         require(
-            ventureBondAddress != address(0),
-            "Market: cannot set media contract as zero address"
+            ventureBondContractAddress != address(0),
+            "Market: cannot set ventureBond contract as zero address"
         );
 
-        ventureBondContract = ventureBondAddress;
+        ventureBondContract = ventureBondContractAddress;
     }
 
     /**
@@ -187,7 +196,7 @@ contract Market is IMarket {
     }
 
     /**
-     * @notice Sets the ask on a particular VentureBond. If the ask cannot be evenly split into the VentureBond's
+     * @notice Sets the ask on a particular ventureBond. If the ask cannot be evenly split into the ventureBond's
      * bid shares, this reverts.
      */
     function setAsk(uint256 tokenId, Ask memory ask)
@@ -213,7 +222,7 @@ contract Market is IMarket {
     }
 
     /**
-     * @notice Sets the bid on a particular VentureBond for a bidder. The token being used to bid
+     * @notice Sets the bid on a particular ventureBond for a bidder. The token being used to bid
      * is transferred from the spender to this contract to be held until removed or accepted.
      * If another bid already exists for the bidder, it is refunded.
      */
@@ -222,7 +231,7 @@ contract Market is IMarket {
         Bid memory bid,
         address spender
     ) public override onlyVentureBondCaller {
-        BidShares memory bidShares = _bidShares[tokenId];
+        BidShares memory bidShares = bidSharesForToken(tokenId);
         require(
             bidShares.creator.value.add(bid.sellOnShare.value) <=
                 uint256(100).mul(Decimal.BASE),
@@ -276,7 +285,7 @@ contract Market is IMarket {
     }
 
     /**
-     * @notice Removes the bid on a particular VentureBond for a bidder. The bid amount
+     * @notice Removes the bid on a particular ventureBond for a bidder. The bid amount
      * is transferred from this contract to the bidder, if they have a bid placed.
      */
     function removeBid(uint256 tokenId, address bidder)
@@ -298,7 +307,7 @@ contract Market is IMarket {
     }
 
     /**
-     * @notice Accepts a bid from a particular bidder. Can only be called by the VentureBond contract.
+     * @notice Accepts a bid from a particular bidder. Can only be called by the ventureBond contract.
      * See {_finalizeNFTTransfer}
      * Provided bid must match a bid in storage. This is to prevent a race condition
      * where a bid may change while the acceptBid call is in transit.
@@ -330,36 +339,38 @@ contract Market is IMarket {
 
     /**
      * @notice Given a token ID and a bidder, this method transfers the value of
-     * the bid to the shareholders. It also transfers the ownership of the VentureBond
+     * the bid to the shareholders. It also transfers the ownership of the ventureBond
      * to the bid recipient. Finally, it removes the accepted bid and the current ask.
      */
     function _finalizeNFTTransfer(uint256 tokenId, address bidder) private {
         Bid memory bid = _tokenBidders[tokenId][bidder];
+        if (!isValidBidShares(_bidShares[tokenId])){
+                setBidShares(tokenId, defaultBidShares);
+            }
         BidShares storage bidShares = _bidShares[tokenId];
 
         IERC20 token = IERC20(bid.currency);
 
-        // Transfer bid share to owner of VentureBond
+        // Transfer bid share to owner of ventureBond
         token.safeTransfer(
             IERC721(ventureBondContract).ownerOf(tokenId),
             splitShare(bidShares.owner, bid.amount)
         );
-        // Transfer bid share to creator of ventureBondContract
+        // Transfer bid share to creator of ventureBond
         token.safeTransfer(
             VentureBond(ventureBondContract).tokenCreators(tokenId),
             splitShare(bidShares.creator, bid.amount)
         );
-        // Transfer bid share to previous owner of VentureBond (if applicable)
+        // Transfer bid share to previous owner of ventureBond (if applicable)
         token.safeTransfer(
             VentureBond(ventureBondContract).previousTokenOwners(tokenId),
             splitShare(bidShares.prevOwner, bid.amount)
         );
 
-        // Transfer VentureBond to bid recipient
+        // Transfer ventureBond to bid recipient
         VentureBond(ventureBondContract).auctionTransfer(tokenId, bid.recipient);
 
         // Calculate the bid share for the new owner,
-        // equal to 100 - creatorShare - sellOnShare
         // equal to 100 - creatorShare - sellOnShare
         bidShares.owner = Decimal.D256(
             uint256(100)

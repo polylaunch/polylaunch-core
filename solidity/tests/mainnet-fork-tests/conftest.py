@@ -103,13 +103,11 @@ def deployed_factory(dai, accounts, cdai, ydai):
     logger = LaunchLogger.deploy({"from": deployer})
     governance = LaunchGovernance.deploy({"from": deployer})
     governor = GovernorAlpha.deploy({"from": deployer})
-    market = Market.deploy({"from": deployer})
     launch = BasicLaunch.deploy({"from": deployer})
     system = PolylaunchSystem.deploy(
         dai.address,
         launch.address,
         governor.address,
-        market.address,
         {"from": deployer},
     )
     auth = PolylaunchSystemAuthority.deploy(system.address, {"from": deployer})
@@ -165,8 +163,6 @@ def running_launch(mint_dummy_token, accounts, deployed_factory):
             constants.FUNDING_CAP,
             constants.INDIVIDUAL_FUNDING_CAP,
             constants.FIXED_SWAP_RATE,
-            constants.NFT_NAME,
-            constants.NFT_SYMBOL,
             constants.GENERIC_NFT_DATA,
         ],
         {"from": accounts[0]},
@@ -263,7 +259,7 @@ def launch_with_active_tap_increase_proposal(
         st.delegate(inv.address, {"from": inv})
 
     tx = governor.proposeRefund(
-            "Want a refund because reasons",
+            "Want a refund because reasons", 0,
             {"from": accounts[0]},
     )
 

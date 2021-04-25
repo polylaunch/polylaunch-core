@@ -54,6 +54,11 @@ library LaunchGovernance {
             "claimRefund: Sender not ventureBond owner"
         );
 
+        require(
+            IVentureBond(self.ventureBondAddress).launchAddressAssociatedWithToken(tokenId) == address(this),
+            "claimRefund: ventureBond not associated with this launch"
+        );
+
         uint256 totalSenderBalance =
             IVentureBond(self.ventureBondAddress).tappableBalance(tokenId).add(
                 self.TOKEN.balanceOf(msg.sender)
@@ -84,7 +89,7 @@ library LaunchGovernance {
             );
         }
 
-        self.totalVotingPower -= refundableBalance;
+        self.totalVotingPower.sub(refundableBalance);
         IVentureBond(self.ventureBondAddress).updateVotingPower(
             tokenId,
             bondVotingPower - refundableBalance,

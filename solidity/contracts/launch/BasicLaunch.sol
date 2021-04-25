@@ -7,10 +7,11 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/utils/Counters.sol";
 
 import "./LaunchUtils.sol";
-import "../venture-nft/VentureBondDataRegistry.sol";
-import "../venture-nft/Market.sol";
+import "../venture-bond/VentureBondDataRegistry.sol";
+import "../venture-bond/Market.sol";
 import "../../interfaces/IVentureBond.sol";
 import "../../interfaces/IMarket.sol";
 import "../../interfaces/ILaunchFactory.sol";
@@ -27,10 +28,12 @@ import {LaunchVault} from "./LaunchVault.sol";
 contract BasicLaunch is PolyVault, ReentrancyGuard {
     using SafeERC20 for IERC20;
     using SafeMath for uint256;
+    using Counters for Counters.Counter;
     using LaunchUtils for LaunchUtils.Data;
     using LaunchRedemption for LaunchUtils.Data;
     using LaunchGovernance for LaunchUtils.Data;
     using LaunchVault for LaunchUtils.Data;
+
 
     using VentureBondDataRegistry for VentureBondDataRegistry.Register;
 
@@ -183,6 +186,10 @@ contract BasicLaunch is PolyVault, ReentrancyGuard {
             self.USD.transferFrom(msg.sender, address(this), amount),
             "Token transfer failed"
         );
+        if (self.provided[msg.sender] == 0){
+            register.supporterIndex[msg.sender] = register.supporterTracker.current();
+            register.supporterTracker.increment();
+        }
 
         self.totalFunding += amount;
         self.provided[msg.sender] += amount;
@@ -350,38 +357,38 @@ contract BasicLaunch is PolyVault, ReentrancyGuard {
     }
 
     /**
-     * @notice Getter for data registry basic nft data by tokenId
-     * @param tokenId id of the token to check
+     * @notice Getter for data registry basic nft data by index, this data will represent the ith nft minted
+     * @param i index to check
      */
-    function getNftDataByTokenId(uint256 tokenId)
+    function getNftDataByIndex(uint256 i)
         external
-        returns (IVentureBond.BaseNFTData memory)
+        returns (IVentureBond.MediaData memory)
     {
-        return register.getNftDataByTokenId(tokenId);
+        return register.getNftDataByIndex(i);
     }
 
     /**
-     * @notice Setter for data registry basic nft data by tokenId
-     * @param tokenId id of the token to associate with given nftData
+     * @notice Setter for data registry basic nft data by index, this data will represent the ith nft minted
+     * @param i index to associate with given nftData
      * @param _nftData BaseNFTData struct that will be used when minting the nft with the associated tokenId
      */
-    function setNftDataByTokenId(
-        uint256 tokenId,
-        IVentureBond.BaseNFTData memory _nftData
+    function setNftDataByIndex(
+        uint256 i,
+        IVentureBond.MediaData memory _nftData
     ) external onlyLauncher {
-        register.setNftDataByTokenId(tokenId, _nftData);
+        register.setNftDataByIndex(i, _nftData);
     }
 
     /**
-     * @notice Batch setter for data registry basic nft data by tokenId
-     * @param tokenIds list of token ids to be associated with corresponding baseNftData structs in _nftData array
-     * @param _nftData list holding BaseNFTData structs to be assigned to the corresponding tokenId
+     * @notice Batch setter for data registry basic nft data by index, this data will represent the ith nft minted
+     * @param i_s list of indexes to be associated with corresponding baseNftData structs in _nftData array
+     * @param _nftData list holding MediaData structs to be assigned to the corresponding tokenId
      */
-    function batchSetNftDataByTokenId(
-        uint256[] memory tokenIds,
-        IVentureBond.BaseNFTData[] memory _nftData
+    function batchSetNftDataByIndex(
+        uint256[] memory i_s,
+        IVentureBond.MediaData[] memory _nftData
     ) external onlyLauncher {
-        register.batchSetNftDataByTokenId(tokenIds, _nftData);
+        register.batchSetNftDataByIndex(i_s, _nftData);
     }
 
     /**

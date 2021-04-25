@@ -12,7 +12,7 @@ import {IVentureBond} from "../../interfaces/IVentureBond.sol";
 import {PolylaunchConstants} from "../system/PolylaunchConstants.sol";
 import {IMarket} from "../../interfaces/IMarket.sol";
 import {ILaunchFactory} from "../../interfaces/ILaunchFactory.sol";
-import {VentureBondDataRegistry} from "../venture-nft/VentureBondDataRegistry.sol";
+import {VentureBondDataRegistry} from "../venture-bond/VentureBondDataRegistry.sol";
 
 import "../../interfaces/IPolyVault.sol";
 import "../../interfaces/ILaunchFactory.sol";
@@ -78,6 +78,11 @@ library LaunchRedemption {
         require(
             IERC721(self.ventureBondAddress).ownerOf(tokenId) == msg.sender,
             "Not your ventureBond"
+        );
+
+        require(
+            IVentureBond(self.ventureBondAddress).launchAddressAssociatedWithToken(tokenId) == address(this),
+            "supporterTap: ventureBond not associated with this launch"
         );
 
         uint256 withdrawable =
@@ -159,6 +164,7 @@ library LaunchRedemption {
      * @notice Claim function for an supporter to either claim and mint their NFT for a successful launch or
      * retrieve their DAI after a failed launch
      * @param self Data struct associated with the launch
+     * @param register Register struct associated with the launch
      */
     function claim(
         LaunchUtils.Data storage self,
@@ -193,57 +199,40 @@ library LaunchRedemption {
         }
     }
 
+
     /**
      * @notice Mints a Venture Bond token for the msg.sender, the tokenURI and metadataURI will need to be fixed later on
      * @param self Data struct associated with the launch
+     * @param register Register struct associated with the launch
      */
     function _claimVentureBond(
         LaunchUtils.Data storage self,
         VentureBondDataRegistry.Register storage register
     ) private {
-        require(
-            !self.nftRedeemed[msg.sender],
-            "Venture Bond already claimed"
-        );
         uint256 userProvided = self.provided[msg.sender];
+        
         uint256 tokenAmount =
             (userProvided.mul(self.FIXED_SWAP_RATE)).div(1e18);
         self.totalVotingPower += tokenAmount;
-        uint256 tokenId = IVentureBond(self.ventureBondAddress).tokenIdCounter();
-        IVentureBond.BaseNFTData memory _nftData = register.nftData[tokenId];
+        uint256 i = register.supporterIndex[msg.sender];
+        IVentureBond.MediaData memory _nftData = register.nftData[i];
         // if the token launcher hasnt assigned data to this nft then mint a basic one with just the important data
-        if (_nftData.contentHash == 0) {
-            _nftData = IVentureBond.BaseNFTData({
+        if (_nftData.metadataHash == 0) {
+            _nftData = IVentureBond.MediaData({
                 tokenURI: self.genericNftData.tokenURI,
-                metadataURI: self.genericNftData.metadataURI,
-                contentHash: self.genericNftData.contentHash,
                 metadataHash: self.genericNftData.metadataHash
             });
         }
-        IVentureBond.VentureBondData memory data =
-            IVentureBond.VentureBondData({
-                tokenURI: _nftData.tokenURI,
-                metadataURI: _nftData.metadataURI,
-                contentHash: _nftData.contentHash,
-                metadataHash: _nftData.metadataHash,
+        IVentureBond.VentureBondParams memory vbParams =
+            IVentureBond.VentureBondParams({
                 tapRate: self.supporterTapRate,
                 lastWithdrawnTime: self.END,
                 tappableBalance: tokenAmount,
                 votingPower: tokenAmount
             });
-
-        uint256 prevOwner = PolylaunchConstants.getPrevOwner();
-        uint256 creator = PolylaunchConstants.getCreator();
-        uint256 owner = PolylaunchConstants.getOwner();
-
-        IMarket.BidShares memory shares =
-            IMarket.BidShares({
-                prevOwner: Decimal.D256(prevOwner),
-                creator: Decimal.D256(creator),
-                owner: Decimal.D256(owner)
-            });
-        self.nftRedeemed[msg.sender] = true;
-        register.isNftMinted[tokenId] = true;
-        IVentureBond(self.ventureBondAddress).mint(data, shares, msg.sender);
+        delete self.provided[msg.sender];
+        delete register.nftData[i];
+        register.isIndexMinted[i] = true;
+        IVentureBond(self.ventureBondAddress).mint(msg.sender, _nftData, vbParams);
     }
 }

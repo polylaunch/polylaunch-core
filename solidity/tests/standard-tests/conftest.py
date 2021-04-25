@@ -41,13 +41,11 @@ def deployed_factory(usd_contract, accounts):
     logger = LaunchLogger.deploy({"from": deployer})
     governance = LaunchGovernance.deploy({"from": deployer})
     governor = GovernorAlpha.deploy({"from": deployer})
-    market = Market.deploy({"from": deployer})
     launch = BasicLaunch.deploy({"from": deployer})
     system = PolylaunchSystem.deploy(
         usd_contract.address,
         launch.address,
         governor.address,
-        market.address,
         {"from": deployer},
     )
     auth = PolylaunchSystemAuthority.deploy(system.address, {"from": deployer})
@@ -97,6 +95,59 @@ def send_any_usd_to_accounts(usd_contract, accounts):
         usd_contract.mint(constants.USD_AMOUNT, {"from": account})
     yield usd_contract
 
+@pytest.fixture(scope="function")
+def alt_launch_minted(accounts, deployed_factory, send_any_usd_to_accounts):
+    alt_coin = GovernableERC20.deploy(
+        accounts[0],
+        accounts[0],
+        chain.time() + 1000,
+        "DummyToken",
+        "TKN",
+        constants.AMOUNT_FOR_SALE,
+        {"from": accounts[0]},
+    )
+    alt_coin.approve(
+        deployed_factory, constants.AMOUNT_FOR_SALE, {"from": accounts[0]}
+    )
+    launch = deployed_factory.createBasicLaunch(
+        [
+            accounts[0],
+            alt_coin.address,
+            constants.AMOUNT_FOR_SALE,
+            constants.ALT_START_DATE,
+            constants.ALT_END_DATE,
+            constants.MINIMUM_FUNDING,
+            constants.INITIAL_DEV_TAP_RATE,
+            constants.INITIAL_INV_TAP_RATE,
+            constants.FUNDING_CAP,
+            constants.INDIVIDUAL_FUNDING_CAP,
+            constants.FIXED_SWAP_RATE,
+            constants.GENERIC_NFT_DATA,
+        ],
+        {"from": accounts[0]},
+    )
+    launch = BasicLaunch.at(launch.return_value)
+    investors = accounts[1:]
+
+    # wait for it to start
+    start_delta = constants.START_DATE - time.time()
+    chain.sleep(int(start_delta) + 1)
+
+    for account in investors:
+        send_any_usd_to_accounts.increaseAllowance(
+            launch, 1000e18, {"from": account}
+        )
+        launch.sendUSD(1000e18, {"from": account})
+
+    chain.sleep(int(constants.END_DATE - constants.START_DATE) + 1)
+
+    venture_bond_address = launch.launchVentureBondAddress({"from": accounts[0]})
+    nft = VentureBond.at(venture_bond_address)
+    for inv in investors:
+        launch.claim({"from": inv})
+
+    yield launch, send_any_usd_to_accounts, nft
+
 
 @pytest.fixture(scope="function")
 def running_launch(mint_dummy_token, accounts, deployed_factory):
@@ -116,8 +167,6 @@ def running_launch(mint_dummy_token, accounts, deployed_factory):
             constants.FUNDING_CAP,
             constants.INDIVIDUAL_FUNDING_CAP,
             constants.FIXED_SWAP_RATE,
-            constants.NFT_NAME,
-            constants.NFT_SYMBOL,
             constants.GENERIC_NFT_DATA,
         ],
         {"from": accounts[0]},
@@ -138,6 +187,7 @@ def successful_launch(running_launch, send_1000_usd_to_accounts, accounts):
             running_launch, 1000e18, {"from": account}
         )
         running_launch.sendUSD(1000e18, {"from": account})
+
 
     chain.sleep(int(constants.END_DATE - constants.START_DATE) + 1)
     yield running_launch, send_1000_usd_to_accounts
@@ -181,3 +231,4 @@ def minted_launch_with_bid(minted_launch, accounts, send_any_usd_to_accounts):
     )
 
     yield launch_contract, venture_bond_contract
+

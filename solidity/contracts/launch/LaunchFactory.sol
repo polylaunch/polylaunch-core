@@ -6,8 +6,8 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import "./BasicLaunch.sol";
 import "../proxy/CloneFactory.sol";
-import "../venture-nft/VentureBond.sol";
-import "../venture-nft/Market.sol";
+import "../venture-bond/VentureBond.sol";
+import "../venture-bond/Market.sol";
 import "../system/PolylaunchSystemAuthority.sol";
 import {Counters} from "@openzeppelin/contracts/utils/Counters.sol";
 import "../governance/LaunchGovernor.sol";
@@ -24,10 +24,10 @@ contract LaunchFactory is CloneFactory, PolylaunchSystemAuthority, ILaunchFactor
     using Counters for Counters.Counter;
     // address of the launch contract used as template for proxies
     address public baseBasicLaunchAddress;
-    // address of the Venture Bond contract used as template for proxies
-    address public baseVentureBondAddress;
-    // address of the Market contract used as template for proxies
-    address public baseMarketAddress;
+    // address of the Venture Bond contract
+    address public ventureBondAddress;
+    // address of the Market contract
+    address public marketAddress;
     // address of the Governor contract
     address public baseGovernorAddress;
     // address of the Vault registry contract
@@ -42,11 +42,7 @@ contract LaunchFactory is CloneFactory, PolylaunchSystemAuthority, ILaunchFactor
     /**
      * @notice Ensure that the provided nft data is valid
      */
-    modifier onlyValidNftData(IVentureBond.BaseNFTData memory _nftData) {
-        require(
-            _nftData.contentHash != 0,
-            "VentureBondDataRegistry: content hash must be non-zero"
-        );
+    modifier onlyValidNftData(IVentureBond.MediaData memory _nftData) {
         require(
             _nftData.metadataHash != 0,
             "VentureBondDataRegistry: metadata hash must be non-zero"
@@ -54,10 +50,6 @@ contract LaunchFactory is CloneFactory, PolylaunchSystemAuthority, ILaunchFactor
         require(
             bytes(_nftData.tokenURI).length != 0,
             "VentureBondDataRegistry: token URI must be non-zero"
-        );
-        require(
-            bytes(_nftData.metadataURI).length != 0,
-            "VentureBondDataRegistry: metadata URI must be non-zero"
         );
         _;
     }
@@ -79,24 +71,24 @@ contract LaunchFactory is CloneFactory, PolylaunchSystemAuthority, ILaunchFactor
 
     /**
      * @notice sets the template address for the VentureBond contract
-     * @param _baseVentureBondAddress the address of the VentureBond template contract
+     * @param _ventureBondAddress the address of the VentureBond template contract
      */
-    function setBaseVentureBondAddress(address _baseVentureBondAddress)
+    function setVentureBondAddress(address _ventureBondAddress)
         public
         onlySystem
     {
-        baseVentureBondAddress = _baseVentureBondAddress;
+        ventureBondAddress = _ventureBondAddress;
     }
 
     /**
      * @notice sets the template address for the market contract
-     * @param _baseMarketAddress the address of the market template contract
+     * @param _marketAddress the address of the market template contract
      */
-    function setBaseMarketAddress(address _baseMarketAddress)
+    function setMarketAddress(address _marketAddress)
         public
         onlySystem
     {
-        baseMarketAddress = _baseMarketAddress;
+        marketAddress = _marketAddress;
     }
 
     /**
@@ -139,7 +131,7 @@ contract LaunchFactory is CloneFactory, PolylaunchSystemAuthority, ILaunchFactor
 
     /**
      * @notice creates a basic launch and emits an event with the associated market and VentureBond addresses of the launch
-     * @param launchInfo struct data for launchInfo data to configure the launch
+     * @param launchInfo struct data for launchInfo data to configure the launch, see ILaunchFactory
      * @return created Basic launch address
      */
     function createBasicLaunch(ILaunchFactory.LaunchInfo memory launchInfo)
@@ -148,15 +140,6 @@ contract LaunchFactory is CloneFactory, PolylaunchSystemAuthority, ILaunchFactor
         returns (address)
     {
         address createdBasicLaunchAddr = createClone(baseBasicLaunchAddress);
-        address createdMarketAddr = createMarket();
-        address createdVentureBondAddr =
-            createVentureBond(
-                createdMarketAddr,
-                createdBasicLaunchAddr,
-                launchInfo._nftName,
-                launchInfo._nftSymbol,
-                polylaunchSystemAddress
-            );
         BasicLaunch clone = BasicLaunch(payable(createdBasicLaunchAddr));
         uint256 launchId_ = launchIdTracker.current();
         launchIdTracker.increment();
@@ -166,7 +149,7 @@ contract LaunchFactory is CloneFactory, PolylaunchSystemAuthority, ILaunchFactor
 
         GovernorAlpha governorClone =
             GovernorAlpha(payable(createdGovernorAddr));
-
+        IVentureBond(ventureBondAddress).authoriseLaunch(createdBasicLaunchAddr);
         require(
             launchInfo._token.transferFrom(
                 msg.sender,
@@ -183,20 +166,20 @@ contract LaunchFactory is CloneFactory, PolylaunchSystemAuthority, ILaunchFactor
         initiateBasicLaunch(
             clone,
             launchInfo,
-            createdVentureBondAddr,
-            createdMarketAddr,
+            ventureBondAddress,
+            marketAddress,
             launchId_
         );
         governorClone.init(
             "Governor",
             createdBasicLaunchAddr,
             address(launchInfo._token),
-            createdVentureBondAddr
+            ventureBondAddress
         );
         LaunchLogger(polylaunchSystemAddress).logBasicLaunchCreated(
                 createdBasicLaunchAddr,
-                createdMarketAddr,
-                createdVentureBondAddr,
+                marketAddress,
+                ventureBondAddress,
                 createdGovernorAddr,
                 launchId_
         );
@@ -225,46 +208,6 @@ contract LaunchFactory is CloneFactory, PolylaunchSystemAuthority, ILaunchFactor
             polylaunchSystemAddress,
             launchId
         );
-    }
-
-    /**
-     * @notice creates a VentureBond contract, setting the ownership and initiating the contract and configures the market
-     * @param _createdMarketAddr the Market address to be configured
-     * @param _createdBasicLaunchAddr the VentureBond address to be configured
-     * @param _nftName the desired name for all NFTs associated with this launch
-     * @param _nftSymbol the desired symbol for all NFTs associated with this launch
-     * @return created VentureBond contract address
-     */
-    function createVentureBond(
-        address _createdMarketAddr,
-        address _createdBasicLaunchAddr,
-        string memory _nftName,
-        string memory _nftSymbol,
-        address polylaunchSystemAddress
-    ) internal returns (address) {
-        VentureBond ventureBond =
-            new VentureBond(
-                _createdMarketAddr,
-                _createdBasicLaunchAddr,
-                _nftName,
-                _nftSymbol,
-                polylaunchSystemAddress
-            );
-        address createdVentureBondAddr = address(ventureBond);
-        Market market = Market(payable(_createdMarketAddr));
-        market.configure(createdVentureBondAddr);
-        return createdVentureBondAddr;
-    }
-
-    /**
-     * @notice creates a Market contract setting the ownership
-     * @return created Market contract address
-     */
-    function createMarket() internal returns (address) {
-        address createdMarketAddr = createClone(baseMarketAddress);
-        Market clone = Market(payable(createdMarketAddr));
-        clone.setOwnership(address(this));
-        return createdMarketAddr;
     }
 
     receive() external payable {

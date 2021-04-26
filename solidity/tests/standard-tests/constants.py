@@ -1,7 +1,7 @@
 import time
 import brownie
 
-AMOUNT_FOR_SALE = 9000000e18 # should be fixed swap rate * funding cap for tests
+AMOUNT_FOR_SALE = 9000000e18  # should be fixed swap rate * funding cap for tests
 START_DATE = time.time() + 1200
 END_DATE = time.time() + 3600
 ALT_START_DATE = END_DATE + 100
@@ -21,38 +21,43 @@ ASK_PRICE = 200e18
 ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
 BID_PRICE = 200e18
 USD_AMOUNT = 5000e18
-GENERIC_NFT_DATA = ["https://test",
-                    "194F55B6FA5CD48B9DD2CACDD9598792602A4EDCB72B9B7CB410124CCFD79078"
-                    ]
-SPECIAL_NFT_DATA = ["https://test",
-                    "194F55A6FA5CD48B9DD2CACDD9698792602A4EDCB72B9B7CB410124CCFD79078"
-                    ]
+GENERIC_NFT_DATA = [
+    "https://test",
+    "194F55B6FA5CD48B9DD2CACDD9598792602A4EDCB72B9B7CB410124CCFD79078",
+]
+SPECIAL_NFT_DATA = [
+    "https://test",
+    "194F55A6FA5CD48B9DD2CACDD9698792602A4EDCB72B9B7CB410124CCFD79078",
+]
 BATCH_SPECIAL_NFT_DATA = [
-    ["https://test",
-     "d9a7e81efacc5660697cf4866d1af38e99275e02b2454b1dccaeb15adf66f575"
-     ],
-    ["https://test1",
-     "194F55B6FA5CD48B9DD2CACDD9598792602A4EDCB72B9B7CB410124CCFD79078"
-     ],
-    ["https://test2",
-     "f9a7e81efacc5660697cf4866d1af38e99275e02b2454b1dccaeb15adf66f575"
-     ],
-    ["https://test3",
-     "194F55B6FA5CD48B9DD2CACDD9598792602A4EDCB72B9B7CB410124CCFD79078"
-     ],
-    ["https://test4",
-     "194F55B6FA5CD48B9DD2CACDD9598792602A4EDCB72B9B7CB410124CCFD79078"
-     ]
+    [
+        "https://test",
+        "d9a7e81efacc5660697cf4866d1af38e99275e02b2454b1dccaeb15adf66f575",
+    ],
+    [
+        "https://test1",
+        "194F55B6FA5CD48B9DD2CACDD9598792602A4EDCB72B9B7CB410124CCFD79078",
+    ],
+    [
+        "https://test2",
+        "f9a7e81efacc5660697cf4866d1af38e99275e02b2454b1dccaeb15adf66f575",
+    ],
+    [
+        "https://test3",
+        "194F55B6FA5CD48B9DD2CACDD9598792602A4EDCB72B9B7CB410124CCFD79078",
+    ],
+    [
+        "https://test4",
+        "194F55B6FA5CD48B9DD2CACDD9598792602A4EDCB72B9B7CB410124CCFD79078",
+    ],
 ]
 
 FAILURE_NFT_DATA = [
-    ["",
-     "194F55B6FA5CD48B9DD2CACDD9598792602A4EDCB72B9B7CB410124CCFD79078"
-     ],
-    ["https://test",
-     "",
-     ],
-    ["https://test",
-     "0"
-     ]
+    ["", "194F55B6FA5CD48B9DD2CACDD9598792602A4EDCB72B9B7CB410124CCFD79078"],
+    [
+        "https://test",
+        "",
+    ],
+    ["https://test", "0"],
 ]
+DUMMY_IPFS_HASH = "dummyhash"

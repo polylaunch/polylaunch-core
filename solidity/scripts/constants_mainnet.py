@@ -61,4 +61,4 @@ FAILURE_NFT_DATA = [
     ["https://test", "0"],
 ]
 
-DUMMY_IPFS_HASH = "dummyhash"
+DUMMY_IPFS_HASH = "bafybeib5z53df4efhnibo75xyydq4v73ctamlrpp62ydttucttdhma5lbm"

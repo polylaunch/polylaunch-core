@@ -19,6 +19,7 @@ import "../polyvault/PolyVault.sol";
 import {LaunchRedemption} from "./LaunchRedemption.sol";
 import {LaunchGovernance} from "./LaunchGovernance.sol";
 import {LaunchVault} from "./LaunchVault.sol";
+import {LaunchLogger} from "./LaunchLogger.sol";
 
 /**
  * @author PolyLaunch Protocol
@@ -33,7 +34,6 @@ contract BasicLaunch is PolyVault, ReentrancyGuard {
     using LaunchRedemption for LaunchUtils.Data;
     using LaunchGovernance for LaunchUtils.Data;
     using LaunchVault for LaunchUtils.Data;
-
 
     using VentureBondDataRegistry for VentureBondDataRegistry.Register;
 
@@ -68,14 +68,9 @@ contract BasicLaunch is PolyVault, ReentrancyGuard {
      * @notice modifier to check that configured governor is making a call
      */
     modifier onlyGovernor() {
-        require(
-            msg.sender == self.governor,
-            "Caller must be governor"
-        );
+        require(msg.sender == self.governor, "Caller must be governor");
         _;
     }
-
-    event FundsDeposited(address indexed supporter, uint256 amount);
 
     /**
      * @notice set the ownership of the contract, sets the owner of the contract which is the token launcher
@@ -92,10 +87,7 @@ contract BasicLaunch is PolyVault, ReentrancyGuard {
         require(!ownershipSet, "Already initiated");
         require(_factory != address(0), "Factory cannot be zero address.");
         require(_launcher != address(0), "Launcher cannot be zero address.");
-        require(
-            _governor != address(0),
-            "Governor cannot be zero address."
-        );
+        require(_governor != address(0), "Governor cannot be zero address.");
 
         self.launchFactory = _factory;
         self.launcher = _launcher;
@@ -130,8 +122,9 @@ contract BasicLaunch is PolyVault, ReentrancyGuard {
             "The minimum funding amount must be greater than 0"
         );
         require(
-            (launchInfo._fundingCap.mul(launchInfo._fixedSwapRate)).div(1e18) 
-            <= launchInfo._totalForSale, "Insufficient tokens provided for the given swap rate"
+            (launchInfo._fundingCap.mul(launchInfo._fixedSwapRate)).div(1e18) <=
+                launchInfo._totalForSale,
+            "Insufficient tokens provided for the given swap rate"
         );
 
         self.launchId = _launchId;
@@ -143,7 +136,9 @@ contract BasicLaunch is PolyVault, ReentrancyGuard {
         self.END = launchInfo._endDate;
         self.MINIMUM_FUNDING = launchInfo._minimumFunding;
         self.FUNDING_CAP = launchInfo._fundingCap;
-        self.INDIVIDUAL_FUNDING_CAP = launchInfo._individualFundingCap == 0 ? 2^256-1 : launchInfo._individualFundingCap;
+        self.INDIVIDUAL_FUNDING_CAP = launchInfo._individualFundingCap == 0
+            ? 2 ^ (256 - 1)
+            : launchInfo._individualFundingCap;
         self.FIXED_SWAP_RATE = launchInfo._fixedSwapRate;
         self.fundRecipient = launchInfo._fundRecipient;
         self.launcherTapRate = launchInfo._initialLauncherTapRate;
@@ -152,6 +147,7 @@ contract BasicLaunch is PolyVault, ReentrancyGuard {
         self.ventureBondAddress = _ventureBondContract;
         self.marketAddress = _marketContract;
         self.genericNftData = launchInfo._genericNftData;
+        self.ipfsHash = launchInfo._ipfsHash;
         self.TOKEN.safeTransferFrom(
             msg.sender,
             address(this),
@@ -168,33 +164,37 @@ contract BasicLaunch is PolyVault, ReentrancyGuard {
      * @notice Allows an address to send in DAI to invest in the DAICO
      * @param amount the amount the address would like to invest
      */
-    function sendUSD(uint256 amount) external{
-        require(
-            block.timestamp >= self.START,
-            "Launch not started"
-        );
+    function sendUSD(uint256 amount) external {
+        require(block.timestamp >= self.START, "Launch not started");
         require(block.timestamp < self.END, "Launch has ended");
         require(
             self.totalFunding.add(amount) <= self.FUNDING_CAP,
             "Launch has reached funding cap"
         );
         require(
-            self.provided[msg.sender].add(amount) <= self.INDIVIDUAL_FUNDING_CAP,
+            self.provided[msg.sender].add(amount) <=
+                self.INDIVIDUAL_FUNDING_CAP,
             "You have reached the individual funding cap"
         );
         require(
             self.USD.transferFrom(msg.sender, address(this), amount),
             "Token transfer failed"
         );
-        if (self.provided[msg.sender] == 0){
-            register.supporterIndex[msg.sender] = register.supporterTracker.current();
+        if (self.provided[msg.sender] == 0) {
+            register.supporterIndex[msg.sender] = register
+                .supporterTracker
+                .current();
             register.supporterTracker.increment();
         }
 
         self.totalFunding += amount;
         self.provided[msg.sender] += amount;
 
-        emit FundsDeposited(msg.sender, amount);
+        LaunchLogger(self.polylaunchSystem).logSupporterFundsDeposited(
+            address(this),
+            msg.sender,
+            amount
+        );
     }
 
     /**
@@ -208,14 +208,14 @@ contract BasicLaunch is PolyVault, ReentrancyGuard {
     /**
      * @notice Launcher withdraws all tokens they provided if the minimum funding amount is not reached.
      */
-    function withdrawTokenAfterFailedLaunch() external onlyLauncher{
+    function withdrawTokenAfterFailedLaunch() external onlyLauncher {
         self.withdrawTokenAfterFailedLaunch();
     }
 
     /**
      * @notice Launcher withdraws all tokens that were not sold during the sale window.
      */
-    function withdrawUnsoldTokens() external onlyLauncher{
+    function withdrawUnsoldTokens() external onlyLauncher {
         self.withdrawUnsoldTokens();
     }
 
@@ -238,14 +238,14 @@ contract BasicLaunch is PolyVault, ReentrancyGuard {
      * @notice activate deposit into the PolyVault
      * @param vaultId the unique identifier of the vault the launcher wants to deploy funds to, refer to VaultRegistry
      */
-    function deposit(uint256 vaultId) external onlyLauncher{
+    function deposit(uint256 vaultId) external onlyLauncher {
         self.deposit(vaultId);
     }
 
     /**
      * @notice exit from a PolyVault
      */
-    function exitFromVault() external onlyLauncher{
+    function exitFromVault() external onlyLauncher {
         self.exitFromVault();
     }
 
@@ -303,6 +303,14 @@ contract BasicLaunch is PolyVault, ReentrancyGuard {
     }
 
     /**
+     * @notice View function to return the ipfs hash of the launch details
+     * @return address of the launcher
+     */
+    function ipfsHash() public view returns (string memory) {
+        return self.ipfsHash;
+    }
+
+    /**
      * @notice View function to return the address of the governer contract
      * @return address of the governer contract
      */
@@ -340,6 +348,46 @@ contract BasicLaunch is PolyVault, ReentrancyGuard {
      */
     function launchMarketAddress() external view returns (address) {
         return self.launchMarketAddress();
+    }
+
+    /**
+     * @notice View function to return the launch soft cap
+     * @return Market contract associated with the launch
+     */
+    function softCap() external view returns (uint256) {
+        return self.MINIMUM_FUNDING;
+    }
+
+    /**
+     * @notice View function to return the launch hard cap
+     * @return launch hard cap
+     */
+    function hardCap() external view returns (uint256) {
+        return self.FUNDING_CAP;
+    }
+
+    /**
+     * @notice View function to return the individual hard cap
+     * @return Market contract associated with the launch
+     */
+    function individualCap() external view returns (uint256) {
+        return self.INDIVIDUAL_FUNDING_CAP;
+    }
+
+    /**
+     * @notice View function to return the sale price
+     * @return sale price
+     */
+    function salePrice() external view returns (uint256) {
+        return self.FIXED_SWAP_RATE;
+    }
+
+    /**
+     * @notice View function to return the number of tokens for sale
+     * @return number of tokens for sale
+     */
+    function tokensForSale() external view returns (uint256) {
+        return self.TOTAL_TOKENS_FOR_SALE;
     }
 
     /**

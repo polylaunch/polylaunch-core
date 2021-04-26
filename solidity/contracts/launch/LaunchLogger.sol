@@ -52,13 +52,17 @@ contract LaunchLogger {
 
     event TokensWithdrawnAfterFailedLaunch(address indexed launchAddress);
 
-    function logTokensWithdrawnAfterFailedLaunch(address launchAddress) external {
+    function logTokensWithdrawnAfterFailedLaunch(address launchAddress)
+        external
+    {
         emit TokensWithdrawnAfterFailedLaunch(launchAddress);
     }
 
     event UnsoldTokensWithdrawn(address indexed launchAddress, uint256 amount);
 
-    function logUnsoldTokensWithdrawn(address launchAddress, uint256 amount) external {
+    function logUnsoldTokensWithdrawn(address launchAddress, uint256 amount)
+        external
+    {
         emit UnsoldTokensWithdrawn(launchAddress, amount);
     }
 
@@ -132,12 +136,14 @@ contract LaunchLogger {
         emit VaultFundsDeposited(launchAddress, amount, vaultProvider, vaultId);
     }
 
-    event VaultFundsTapped(address indexed launchAddress, uint256 indexed amount);
+    event VaultFundsTapped(
+        address indexed launchAddress,
+        uint256 indexed amount
+    );
 
-    function logVaultFundsTapped(
-        address launchAddress,
-        uint256 amount
-    ) external {
+    function logVaultFundsTapped(address launchAddress, uint256 amount)
+        external
+    {
         emit VaultFundsTapped(launchAddress, amount);
     }
 
@@ -150,26 +156,45 @@ contract LaunchLogger {
     // ===== LaunchFactory =====
 
     event BasicLaunchCreated(
-        address indexed createdBasicLaunchAddress,
-        address createdVentureBondAddress,
-        address createdMarketAddress,
-        address createdGovernorAddress,
-        uint256 launchId
+        address indexed basicLaunchAddress,
+        address ventureBondAddress,
+        address marketAddress,
+        address governorAddress,
+        uint256 launchId,
+        string ipfsHash
     );
 
     function logBasicLaunchCreated(
-        address _createdBasicLaunchAddr,
-        address _createdVentureBondAddr,
-        address _createdMarketAddr,
-        address _createdGovernorAddr,
-        uint256 _launchId
+        address _basicLaunchAddr,
+        address _ventureBondAddr,
+        address _marketAddr,
+        address _governorAddr,
+        uint256 _launchId,
+        string calldata _ipfsHash
     ) external {
         emit BasicLaunchCreated(
-                _createdBasicLaunchAddr,
-                _createdVentureBondAddr,
-                _createdMarketAddr,
-                _createdGovernorAddr,
-                _launchId);
+            _basicLaunchAddr,
+            _ventureBondAddr,
+            _marketAddr,
+            _governorAddr,
+            _launchId,
+            _ipfsHash
+        );
     }
 
+    // ===== BasicLaunch =====
+
+    event SupporterFundsDeposited(
+        address indexed launchAddress,
+        address sender,
+        uint256 amount
+    );
+
+    function logSupporterFundsDeposited(
+        address launchAddress,
+        address sender,
+        uint256 amount
+    ) external {
+        emit SupporterFundsDeposited(launchAddress, sender, amount);
+    }
 }

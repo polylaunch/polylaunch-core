@@ -17,7 +17,7 @@ def launch_with_active_tap_increase_proposal(request, successful_launch, account
     st = brownie.GovernableERC20.at(launch_token_address)
 
     brownie.chain.sleep(1000000)
-    investors = accounts[1:]
+    investors = accounts[1:10]
 
     for token_id, inv in enumerate(investors):
         launch.claim({"from": inv})
@@ -31,7 +31,8 @@ def launch_with_active_tap_increase_proposal(request, successful_launch, account
         )
     elif request.param == "REFUND":
         tx = governor.proposeRefund(
-            "Want a refund because reasons", 0,
+            "Want a refund because reasons",
+            0,
             {"from": accounts[1]},
         )
 
@@ -48,7 +49,7 @@ def launch_where_investors_have_claimed_NFT(successful_launch, accounts):
     st = brownie.GovernableERC20.at(launch_token_address)
 
     brownie.chain.sleep(1000000)
-    investors = accounts[1:]
+    investors = accounts[1:10]
 
     for token_id, inv in enumerate(investors):
         launch.claim({"from": inv})
@@ -63,7 +64,7 @@ def launch_where_investors_have_claimed_NFT(successful_launch, accounts):
 def launch_with_succeeded_proposal(launch_with_active_tap_increase_proposal, accounts):
     proposal_id, launch, governor = launch_with_active_tap_increase_proposal
 
-    investors = accounts[1:]
+    investors = accounts[1:10]
 
     # Cast votes to make launch succeed
     for token_id, inv in enumerate(investors):
@@ -109,7 +110,9 @@ def test_propose_refund_as_owner(successful_launch, accounts):
     launch, _ = successful_launch
     governor = get_governor(launch, accounts[0])
     launch.claim({"from": accounts[1]})
-    tx = governor.proposeRefund("Want a refund because reasons",0, {"from": accounts[0]})
+    tx = governor.proposeRefund(
+        "Want a refund because reasons", 0, {"from": accounts[0]}
+    )
 
     assert "RefundProposalCreated" in tx.events
     assert tx.events["RefundProposalCreated"]["id"] == tx.return_value
@@ -126,7 +129,9 @@ def test_propose_refund_as_non_NFT_holder_reverts(successful_launch, accounts):
     with brownie.reverts(
         "LaunchGovernor::proposeRefund: Must be launcher or hold a venture bond to propose a refund"
     ):
-        governor.proposeRefund("Want a refund because reasons", 0, {"from": accounts[2]})
+        governor.proposeRefund(
+            "Want a refund because reasons", 0, {"from": accounts[2]}
+        )
 
 
 def test_propose_refund_as_NFT_holder_succeeds(
@@ -134,7 +139,9 @@ def test_propose_refund_as_NFT_holder_succeeds(
 ):
     launch, governor = launch_where_investors_have_claimed_NFT
 
-    tx = governor.proposeRefund("Want a refund because reasons", 0, {"from": accounts[1]})
+    tx = governor.proposeRefund(
+        "Want a refund because reasons", 0, {"from": accounts[1]}
+    )
 
     assert "RefundProposalCreated" in tx.events
     assert tx.events["RefundProposalCreated"]["id"] == tx.return_value
@@ -240,7 +247,9 @@ def test_execute_queued_proposal_after_grace_period_expires_fails(
         governor.execute(proposal_id, {"from": accounts[0]})
 
 
-def test_execute_queued_proposal_before_eta_fails(launch_with_queued_proposal, accounts):
+def test_execute_queued_proposal_before_eta_fails(
+    launch_with_queued_proposal, accounts
+):
     proposal_id, launch, governor = launch_with_queued_proposal
 
     with brownie.reverts(
@@ -259,7 +268,9 @@ def test_double_vote_same_address_reverts(
         vote_tx = governor.castVote(0, proposal_id, True, {"from": accounts[1]})
 
 
-def test_double_vote_same_NFT_reverts(launch_with_active_tap_increase_proposal, accounts):
+def test_double_vote_same_NFT_reverts(
+    launch_with_active_tap_increase_proposal, accounts
+):
     proposal_id, launch, governor = launch_with_active_tap_increase_proposal
 
     vote_tx = governor.castVote(0, proposal_id, True, {"from": accounts[1]})
@@ -305,4 +316,4 @@ def test_claim_refund_after_succeeded_proposal_succeeds(
     tx = launch.claimRefund(0, {"from": accounts[1]})
 
     assert tx.return_value == 1000e18
-    # assert "RefundClaimed" in tx.events -- for some reason this event isn't emitted?
+    assert "RefundClaimed" in tx.events

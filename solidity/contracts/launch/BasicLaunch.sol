@@ -453,4 +453,13 @@ contract BasicLaunch is PolyVault, ReentrancyGuard {
     function claimRefund(uint256 tokenId) public returns (uint256) {
         return self.claimRefund(tokenId);
     }
+
+    /**
+     * @notice Allows launcher to update the ipfs hash containing the project description
+     * @param _newIpfsHash ipfs hash containing the new project details
+     */
+    function updateIpfsHash(string memory _newIpfsHash) public onlyLauncher {
+        self.ipfsHash = _newIpfsHash;
+    }
+
 }

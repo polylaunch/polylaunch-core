@@ -20,7 +20,11 @@ import {LaunchLogger} from "./LaunchLogger.sol";
  * @title launch factory
  * @notice The factory that can deploy DAICOs
  */
-contract LaunchFactory is CloneFactory, PolylaunchSystemAuthority, ILaunchFactory {
+contract LaunchFactory is
+    CloneFactory,
+    PolylaunchSystemAuthority,
+    ILaunchFactory
+{
     using Counters for Counters.Counter;
     // address of the launch contract used as template for proxies
     address public baseBasicLaunchAddress;
@@ -84,10 +88,7 @@ contract LaunchFactory is CloneFactory, PolylaunchSystemAuthority, ILaunchFactor
      * @notice sets the template address for the market contract
      * @param _marketAddress the address of the market template contract
      */
-    function setMarketAddress(address _marketAddress)
-        public
-        onlySystem
-    {
+    function setMarketAddress(address _marketAddress) public onlySystem {
         marketAddress = _marketAddress;
     }
 
@@ -149,7 +150,9 @@ contract LaunchFactory is CloneFactory, PolylaunchSystemAuthority, ILaunchFactor
 
         GovernorAlpha governorClone =
             GovernorAlpha(payable(createdGovernorAddr));
-        IVentureBond(ventureBondAddress).authoriseLaunch(createdBasicLaunchAddr);
+        IVentureBond(ventureBondAddress).authoriseLaunch(
+            createdBasicLaunchAddr
+        );
         require(
             launchInfo._token.transferFrom(
                 msg.sender,
@@ -163,13 +166,7 @@ contract LaunchFactory is CloneFactory, PolylaunchSystemAuthority, ILaunchFactor
             "error sending tokens from factory to launch"
         );
 
-        initiateBasicLaunch(
-            clone,
-            launchInfo,
-            ventureBondAddress,
-            marketAddress,
-            launchId_
-        );
+        initiateBasicLaunch(clone, launchInfo, launchId_);
         governorClone.init(
             "Governor",
             createdBasicLaunchAddr,
@@ -177,11 +174,12 @@ contract LaunchFactory is CloneFactory, PolylaunchSystemAuthority, ILaunchFactor
             ventureBondAddress
         );
         LaunchLogger(polylaunchSystemAddress).logBasicLaunchCreated(
-                createdBasicLaunchAddr,
-                marketAddress,
-                ventureBondAddress,
-                createdGovernorAddr,
-                launchId_
+            createdBasicLaunchAddr,
+            marketAddress,
+            ventureBondAddress,
+            createdGovernorAddr,
+            launchId_,
+            launchInfo._ipfsHash
         );
         return createdBasicLaunchAddr;
     }
@@ -190,21 +188,18 @@ contract LaunchFactory is CloneFactory, PolylaunchSystemAuthority, ILaunchFactor
      * @notice initiates the created BasicLaunch function of a BasicLaunch contract that has been created
      * @param basicLaunch the basic launch contract to be initiated
      * @param launchInfo struct data for the launchInfo to be provided in initiation
-     * @param createdVentureBondAddr the Venture Bond address to be associated with this launch
-     * @param createdMarketAddr the Market address to be associated with this launch
+     * @param launchId id for the launch
      */
     function initiateBasicLaunch(
         BasicLaunch basicLaunch,
         ILaunchFactory.LaunchInfo memory launchInfo,
-        address createdVentureBondAddr,
-        address createdMarketAddr,
         uint256 launchId
     ) internal {
         basicLaunch.init(
             usdAddress,
             launchInfo,
-            createdVentureBondAddr,
-            createdMarketAddr,
+            ventureBondAddress,
+            marketAddress,
             polylaunchSystemAddress,
             launchId
         );

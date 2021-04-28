@@ -83,6 +83,8 @@ library LaunchUtils {
         bool isRefundMode;
         // polylaunch system address
         address polylaunchSystem;
+        // hash storing launch details such as name, logo, description
+        string ipfsHash;
     }
 
     /**
@@ -123,7 +125,8 @@ library LaunchUtils {
         if (!self.launchSuccessful) {
             return 0;
         }
-        uint256 tapRate = IVentureBond(self.ventureBondAddress).tapRate(tokenId);
+        uint256 tapRate =
+            IVentureBond(self.ventureBondAddress).tapRate(tokenId);
         uint256 lastWithdrawnTime =
             IVentureBond(self.ventureBondAddress).lastWithdrawnTime(tokenId);
         uint256 tappableBalance =
@@ -169,7 +172,11 @@ library LaunchUtils {
      * @param self Data struct associated with the launch
      * @return the start time of the launch
      */
-    function launchStartTime(Data storage self) internal view returns (uint256) {
+    function launchStartTime(Data storage self)
+        internal
+        view
+        returns (uint256)
+    {
         return self.START;
     }
 

@@ -7,7 +7,6 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
  * @title Interface for Compound ERC20
  */
 interface ILaunchFactory {
-
     /**
      * @notice struct to store information required for deploying a basic launch
      */
@@ -36,8 +35,9 @@ interface ILaunchFactory {
         uint256 _fixedSwapRate;
         // generic data for an NFT
         IVentureBond.MediaData _genericNftData;
+        // IPFS hash where launch details such as name, logo and description are stored
+        string _ipfsHash;
     }
 
     function getVaultRegistryAddress() external returns (address);
-
 }

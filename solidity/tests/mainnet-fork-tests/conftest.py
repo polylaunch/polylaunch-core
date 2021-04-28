@@ -124,7 +124,11 @@ def deployed_factory(dai, accounts, cdai, ydai):
         vault_registry.address, ydai.address, "YEARN_VAULTS_DAI", 2, {"from": deployer}
     )
     system.registerNewVault(
-        vault_registry.address, constants.AAVE_LENDING_POOL, "AAVE_LENDING_DAI", 3, {"from": deployer}
+        vault_registry.address,
+        constants.AAVE_LENDING_POOL,
+        "AAVE_LENDING_DAI",
+        3,
+        {"from": deployer},
     )
     accounts.remove(deployer)
     yield factory, system
@@ -164,6 +168,7 @@ def running_launch(mint_dummy_token, accounts, deployed_factory):
             constants.INDIVIDUAL_FUNDING_CAP,
             constants.FIXED_SWAP_RATE,
             constants.GENERIC_NFT_DATA,
+            constants.DUMMY_IPFS_HASH,
         ],
         {"from": accounts[0]},
     )
@@ -179,7 +184,9 @@ def successful_launch(running_launch, send_10_eth_of_dai_to_accounts, accounts):
     chain.sleep(int(start_delta) + 1)
 
     for account in investor_accounts:
-        send_10_eth_of_dai_to_accounts.approve(running_launch, 1000e18, {"from": account})
+        send_10_eth_of_dai_to_accounts.approve(
+            running_launch, 1000e18, {"from": account}
+        )
         running_launch.sendUSD(1000e18, {"from": account})
 
     chain.sleep(int(constants.END_DATE - constants.START_DATE) + 1)
@@ -199,17 +206,19 @@ def success_launch_yearn(successful_launch, send_10_eth_of_dai_to_accounts, acco
     launch_contract.deposit(2, {"from": accounts[0]})
     yield launch_contract
 
+
 @pytest.fixture(scope="function")
 def success_launch_aave(successful_launch, send_10_eth_of_dai_to_accounts, accounts):
     launch_contract, usd_contract = successful_launch
     launch_contract.deposit(3, {"from": accounts[0]})
     yield launch_contract
 
+
 @pytest.fixture(scope="function")
 def launch_with_succeeded_proposal(launch_with_active_tap_increase_proposal, accounts):
     proposal_id, launch, governor = launch_with_active_tap_increase_proposal
 
-    investors = accounts[1:]
+    investors = accounts[1:10]
 
     # Cast votes to make launch succeed
     for token_id, inv in enumerate(investors):
@@ -217,6 +226,7 @@ def launch_with_succeeded_proposal(launch_with_active_tap_increase_proposal, acc
 
     chain.mine(20)  # Mine enough blocks to complete launch
     yield proposal_id, launch, governor
+
 
 @pytest.fixture(scope="function")
 def launch_with_queued_proposal(launch_with_succeeded_proposal, accounts):
@@ -226,22 +236,23 @@ def launch_with_queued_proposal(launch_with_succeeded_proposal, accounts):
 
     yield proposal_id, launch, governor
 
+
 def get_governor(launch, sender):
     return GovernorAlpha.at(launch.governor({"from": sender}))
 
+
 @pytest.fixture(params=["COMP", "YEARN", "AAVE"], scope="function")
 def launch_with_active_tap_increase_proposal(
-        request,
-        successful_launch,
-        accounts,
-        gen_lev_farm_strat
+    request, successful_launch, accounts, gen_lev_farm_strat
 ):
     launch, _ = successful_launch
     if request.param == "COMP":
         launch.deposit(1, {"from": accounts[0]})
     elif request.param == "YEARN":
         launch.deposit(2, {"from": accounts[0]})
-        keeper = brownie.accounts.at("0xC3D6880fD95E06C816cB030fAc45b3ffe3651Cb0", force=True)
+        keeper = brownie.accounts.at(
+            "0xC3D6880fD95E06C816cB030fAc45b3ffe3651Cb0", force=True
+        )
         chain.mine(1000)
         gen_lev_farm_strat.harvest({"from": keeper})
         brownie.accounts.remove(keeper)
@@ -252,15 +263,16 @@ def launch_with_active_tap_increase_proposal(
     launch_token_address = governor.launchToken({"from": accounts[1]})
     st = GovernableERC20.at(launch_token_address)
     chain.sleep(1000000)
-    investors = accounts[1:]
+    investors = accounts[1:10]
 
     for token_id, inv in enumerate(investors):
         launch.claim({"from": inv})
         st.delegate(inv.address, {"from": inv})
 
     tx = governor.proposeRefund(
-            "Want a refund because reasons", 0,
-            {"from": accounts[0]},
+        "Want a refund because reasons",
+        0,
+        {"from": accounts[0]},
     )
 
     chain.mine(2)

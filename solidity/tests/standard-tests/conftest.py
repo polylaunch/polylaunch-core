@@ -55,6 +55,7 @@ def deployed_factory(usd_contract, accounts):
     accounts.remove(deployer)
     yield factory
 
+
 @pytest.fixture(scope="module", autouse=True)
 def usd_contract(BasicERC20, accounts):
     contract = BasicERC20.deploy("Dai Stablecoin", "DAI", {"from": accounts[0]})
@@ -95,6 +96,7 @@ def send_any_usd_to_accounts(usd_contract, accounts):
         usd_contract.mint(constants.USD_AMOUNT, {"from": account})
     yield usd_contract
 
+
 @pytest.fixture(scope="function")
 def alt_launch_minted(accounts, deployed_factory, send_any_usd_to_accounts):
     alt_coin = GovernableERC20.deploy(
@@ -106,9 +108,7 @@ def alt_launch_minted(accounts, deployed_factory, send_any_usd_to_accounts):
         constants.AMOUNT_FOR_SALE,
         {"from": accounts[0]},
     )
-    alt_coin.approve(
-        deployed_factory, constants.AMOUNT_FOR_SALE, {"from": accounts[0]}
-    )
+    alt_coin.approve(deployed_factory, constants.AMOUNT_FOR_SALE, {"from": accounts[0]})
     launch = deployed_factory.createBasicLaunch(
         [
             accounts[0],
@@ -123,20 +123,19 @@ def alt_launch_minted(accounts, deployed_factory, send_any_usd_to_accounts):
             constants.INDIVIDUAL_FUNDING_CAP,
             constants.FIXED_SWAP_RATE,
             constants.GENERIC_NFT_DATA,
+            constants.DUMMY_IPFS_HASH,
         ],
         {"from": accounts[0]},
     )
     launch = BasicLaunch.at(launch.return_value)
-    investors = accounts[1:]
+    investors = accounts[1:10]
 
     # wait for it to start
     start_delta = constants.START_DATE - time.time()
     chain.sleep(int(start_delta) + 1)
 
     for account in investors:
-        send_any_usd_to_accounts.increaseAllowance(
-            launch, 1000e18, {"from": account}
-        )
+        send_any_usd_to_accounts.increaseAllowance(launch, 1000e18, {"from": account})
         launch.sendUSD(1000e18, {"from": account})
 
     chain.sleep(int(constants.END_DATE - constants.START_DATE) + 1)
@@ -168,6 +167,7 @@ def running_launch(mint_dummy_token, accounts, deployed_factory):
             constants.INDIVIDUAL_FUNDING_CAP,
             constants.FIXED_SWAP_RATE,
             constants.GENERIC_NFT_DATA,
+            constants.DUMMY_IPFS_HASH,
         ],
         {"from": accounts[0]},
     )
@@ -176,7 +176,7 @@ def running_launch(mint_dummy_token, accounts, deployed_factory):
 
 @pytest.fixture(scope="function")
 def successful_launch(running_launch, send_1000_usd_to_accounts, accounts):
-    investor_accounts = accounts[1:]
+    investor_accounts = accounts[1:10]
 
     # wait for it to start
     start_delta = constants.START_DATE - time.time()
@@ -187,7 +187,6 @@ def successful_launch(running_launch, send_1000_usd_to_accounts, accounts):
             running_launch, 1000e18, {"from": account}
         )
         running_launch.sendUSD(1000e18, {"from": account})
-
 
     chain.sleep(int(constants.END_DATE - constants.START_DATE) + 1)
     yield running_launch, send_1000_usd_to_accounts
@@ -206,9 +205,11 @@ def failed_launch(running_launch, accounts):
 
 @pytest.fixture(scope="function")
 def minted_launch(successful_launch, accounts):
-    investors = accounts[1:]
+    investors = accounts[1:10]
     launch_contract, usd_contract = successful_launch
-    venture_bond_address = launch_contract.launchVentureBondAddress({"from": accounts[0]})
+    venture_bond_address = launch_contract.launchVentureBondAddress(
+        {"from": accounts[0]}
+    )
     venture_bond_contract = VentureBond.at(venture_bond_address)
     for n, inv in enumerate(investors):
         launch_contract.claim({"from": inv})
@@ -219,7 +220,9 @@ def minted_launch(successful_launch, accounts):
 @pytest.fixture(scope="function")
 def minted_launch_with_bid(minted_launch, accounts, send_any_usd_to_accounts):
     launch_contract, venture_bond_contract = minted_launch
-    market_contract = Market.at(launch_contract.launchMarketAddress({"from": accounts[0]}))
+    market_contract = Market.at(
+        launch_contract.launchMarketAddress({"from": accounts[0]})
+    )
     bidder = accounts[2]
     send_any_usd_to_accounts.increaseAllowance(
         market_contract, constants.BID_PRICE, {"from": bidder}
@@ -231,4 +234,3 @@ def minted_launch_with_bid(minted_launch, accounts, send_any_usd_to_accounts):
     )
 
     yield launch_contract, venture_bond_contract
-

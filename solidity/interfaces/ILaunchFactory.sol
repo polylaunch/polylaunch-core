@@ -23,10 +23,10 @@ interface ILaunchFactory {
         uint256 _endDate;
         // minimum funding required for the launch to succeed
         uint256 _minimumFunding;
-        // the tap rate for launcher (wei/sec)
-        uint256 _initialLauncherTapRate;
-        // the tap rate for supporters (wei/sec)
-        uint256 _initialSupporterTapRate;
+        // launcher initial vested period (in seconds)
+        uint256 _initialLauncherVesting;
+        // supporter initial vested period (in seconds)
+        uint256 _initialSupporterVesting;
         // the total amount of funds a launch can receive (DAI)
         uint256 _fundingCap;
         // the max amount an individual address is allowed to contribute (DAI)

@@ -32,6 +32,7 @@ library LaunchRedemption {
         if (block.timestamp > self.END && !self.launchSuccessful) {
             if (self.totalFunding > self.MINIMUM_FUNDING) {
                 self.launchSuccessful = true;
+                self.launcherTapRate = self.totalFunding.div(self.launcherVestingPeriod);
             }
         }
         require(
@@ -182,6 +183,7 @@ library LaunchRedemption {
         if (block.timestamp > self.END && !self.launchSuccessful) {
             if (self.totalFunding > self.MINIMUM_FUNDING) {
                 self.launchSuccessful = true;
+                self.launcherTapRate = self.totalFunding.div(self.launcherVestingPeriod);
             }
         }
 
@@ -214,6 +216,7 @@ library LaunchRedemption {
         uint256 tokenAmount =
             (userProvided.mul(self.FIXED_SWAP_RATE)).div(1e18);
         self.totalVotingPower += tokenAmount;
+        uint256 tapRate = tokenAmount.div(self.supporterVestingPeriod);
         uint256 i = register.supporterIndex[msg.sender];
         IVentureBond.MediaData memory _nftData = register.nftData[i];
         // if the token launcher hasnt assigned data to this nft then mint a basic one with just the important data
@@ -225,7 +228,7 @@ library LaunchRedemption {
         }
         IVentureBond.VentureBondParams memory vbParams =
             IVentureBond.VentureBondParams({
-                tapRate: self.supporterTapRate,
+                tapRate: tapRate,
                 lastWithdrawnTime: self.END,
                 tappableBalance: tokenAmount,
                 votingPower: tokenAmount

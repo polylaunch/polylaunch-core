@@ -36,6 +36,7 @@ library LaunchVault {
         if (block.timestamp > self.END && !self.launchSuccessful) {
             if (self.totalFunding > self.MINIMUM_FUNDING) {
                 self.launchSuccessful = true;
+                self.launcherTapRate = self.totalFunding.div(self.launcherVestingPeriod);
             }
         }
         require(

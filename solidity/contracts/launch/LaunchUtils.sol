@@ -51,8 +51,10 @@ library LaunchUtils {
         uint256 FIXED_SWAP_RATE;
         // launcher tap rate (wei/sec)
         uint256 launcherTapRate;
-        // supporter tap rate (wei/sec)
-        uint256 supporterTapRate;
+        // launcher initial vested period (in seconds)
+        uint256 launcherVestingPeriod;
+        // supporter initial vested period (in seconds)
+        uint256 supporterVestingPeriod;
         // launcher who will receive USD funds
         address fundRecipient;
         // mapping to hold the amount an address has provided to the launch in DAI

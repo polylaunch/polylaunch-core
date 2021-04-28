@@ -34,9 +34,9 @@ def test_mint_an_nft(successful_launch, accounts, deployed_factory):
             venture_bond_contract.lastWithdrawnTime(token_id, {"from": inv})
             == constants.END_DATE
         )
-        assert (
+        assert (round(
             venture_bond_contract.tapRate(token_id, {"from": inv})
-            == constants.INITIAL_INV_TAP_RATE
+            - int(((constants.INVESTMENT_AMOUNT * constants.FIXED_SWAP_RATE) / 1e18)/constants.INITIAL_INV_VESTING) , -2) == 0
         )
         assert (
             venture_bond_contract.tappableBalance(token_id, {"from": inv})
@@ -130,7 +130,7 @@ def test_cannot_mint_manually(successful_launch, accounts):
         venture_bond_contract.mint(
             accounts[1],
             ["PolyNFT", random.randint(1, 100000)],
-            [constants.INITIAL_INV_TAP_RATE, constants.END_DATE, 999999999, 0],
+            [constants.INITIAL_INV_VESTING, constants.END_DATE, 999999999, 0],
             {"from": accounts[0]},
         )
 

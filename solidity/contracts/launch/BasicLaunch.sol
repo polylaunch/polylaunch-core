@@ -141,8 +141,8 @@ contract BasicLaunch is PolyVault, ReentrancyGuard {
             : launchInfo._individualFundingCap;
         self.FIXED_SWAP_RATE = launchInfo._fixedSwapRate;
         self.fundRecipient = launchInfo._fundRecipient;
-        self.launcherTapRate = launchInfo._initialLauncherTapRate;
-        self.supporterTapRate = launchInfo._initialSupporterTapRate;
+        self.launcherVestingPeriod = launchInfo._initialLauncherVesting;
+        self.supporterVestingPeriod = launchInfo._initialSupporterVesting;
         self.lastWithdrawn = launchInfo._endDate;
         self.ventureBondAddress = _ventureBondContract;
         self.marketAddress = _marketContract;

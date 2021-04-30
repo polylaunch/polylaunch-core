@@ -15,8 +15,8 @@ def test_deposit_to_all_funds_withdrawn(successful_launch, accounts, adai, deplo
     initial_dai_own_balance = usd_contract.balanceOf(accounts[0])
     system_i_dai_balance = usd_contract.balanceOf(deployed_factory[1])
     brownie.chain.sleep(10000000)
-
-    launch_contract.launcherTap({"from": accounts[0]})
+    brownie.chain.mine(1000)
+    tx = launch_contract.launcherTap({"from": accounts[0]})
     after_dai_balance = usd_contract.balanceOf(launch_contract.address)
     after_adai_balance = adai.balanceOf(launch_contract.address)
     after_dai_own_balance = usd_contract.balanceOf(accounts[0])
@@ -30,7 +30,7 @@ def test_deposit_to_all_funds_withdrawn(successful_launch, accounts, adai, deplo
     system_a_dai_balance = usd_contract.balanceOf(deployed_factory[1])
     assert adai.balanceOf(launch_contract.address) == 0
     assert system_i_dai_balance < system_a_dai_balance
-    brownie.chain.sleep(100000)
+    brownie.chain.sleep(1000000000)
     tx = launch_contract.launcherTap({"from": accounts[0]})
     assert "LauncherFundsTapped" in tx.events
     assert usd_contract.balanceOf(launch_contract.address) == 0

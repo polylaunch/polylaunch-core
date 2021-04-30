@@ -25,7 +25,7 @@ def launch_with_active_tap_increase_proposal(request, successful_launch, account
 
     if request.param == "TAP_INCREASE":
         tx = governor.proposeTapIncrease(
-            constants.INITIAL_DEV_TAP_RATE + 5,
+            launch.launcherTapRate() + 5,
             "Increase tap rate by 5",
             {"from": accounts[0]},
         )
@@ -96,7 +96,7 @@ def test_propose_tap_increase_by_owner(successful_launch, accounts):
     governor = get_governor(launch, accounts[0])
 
     tx = governor.proposeTapIncrease(
-        constants.INITIAL_DEV_TAP_RATE + 5,
+        constants.INITIAL_DEV_VESTING + 5,
         "Increase tap rate by 5",
         {"from": accounts[0]},
     )
@@ -159,7 +159,7 @@ def test_propose_tap_increase_by_non_owner_reverts(successful_launch, accounts):
         "LaunchGovernor::proposeTapIncrease: only the launcher can propose a tap increase"
     ):
         tx = governor.proposeTapIncrease(
-            constants.INITIAL_DEV_TAP_RATE + 5,
+            constants.INITIAL_DEV_VESTING + 5,
             "Increase tap rate by 5",
             {"from": accounts[1]},
         )

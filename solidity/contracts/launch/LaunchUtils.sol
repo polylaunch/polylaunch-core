@@ -51,8 +51,10 @@ library LaunchUtils {
         uint256 FIXED_SWAP_RATE;
         // launcher tap rate (wei/sec)
         uint256 launcherTapRate;
-        // supporter tap rate (wei/sec)
-        uint256 supporterTapRate;
+        // launcher initial vested period (in seconds)
+        uint256 launcherVestingPeriod;
+        // supporter initial vested period (in seconds)
+        uint256 supporterVestingPeriod;
         // launcher who will receive USD funds
         address fundRecipient;
         // mapping to hold the amount an address has provided to the launch in DAI
@@ -196,32 +198,6 @@ library LaunchUtils {
      */
     function tokenForLaunch(Data storage self) internal view returns (IERC20) {
         return self.TOKEN;
-    }
-
-    /**
-     * @notice return the VentureBond address associated with the launch
-     * @param self Data struct associated with the launch
-     * @return the VentureBond address associated with the launch
-     */
-    function launchVentureBondAddress(Data storage self)
-        internal
-        view
-        returns (address)
-    {
-        return self.ventureBondAddress;
-    }
-
-    /**
-     * @notice return the market address associated with the launch
-     * @param self Data struct associated with the launch
-     * @return the market address associated with the launch
-     */
-    function launchMarketAddress(Data storage self)
-        internal
-        view
-        returns (address)
-    {
-        return self.marketAddress;
     }
 
     function min(uint256 a, uint256 b) internal pure returns (uint256) {

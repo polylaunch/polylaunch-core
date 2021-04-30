@@ -10,7 +10,7 @@ import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 
 import "./LaunchUtils.sol";
-import "../venture-bond/VentureBondDataRegistry.sol";
+import "./PreLaunchRegistry.sol";
 import "../venture-bond/Market.sol";
 import "../../interfaces/IVentureBond.sol";
 import "../../interfaces/IMarket.sol";
@@ -35,12 +35,13 @@ contract BasicLaunch is PolyVault, ReentrancyGuard {
     using LaunchGovernance for LaunchUtils.Data;
     using LaunchVault for LaunchUtils.Data;
 
-    using VentureBondDataRegistry for VentureBondDataRegistry.Register;
+    using PreLaunchRegistry for PreLaunchRegistry.Register;
 
     // storage struct for all information pertaining to a particular Launch
     LaunchUtils.Data self;
 
-    VentureBondDataRegistry.Register register;
+    // storage struct for all nft data and whitelist
+    PreLaunchRegistry.Register register;
 
     // variable to ensure that the setOwnership is only called once
     bool private ownershipSet;
@@ -164,6 +165,7 @@ contract BasicLaunch is PolyVault, ReentrancyGuard {
     function sendUSD(uint256 amount) external {
         require(block.timestamp >= self.START, "Launch not started");
         require(block.timestamp < self.END, "Launch has ended");
+        require(register.isWhiteListed[msg.sender], "You are not whitelisted");
         require(
             self.totalFunding.add(amount) <= self.FUNDING_CAP,
             "Launch has reached funding cap"
@@ -474,4 +476,17 @@ contract BasicLaunch is PolyVault, ReentrancyGuard {
     function updateIpfsHash(string memory _newIpfsHash) public onlyLauncher {
         self.ipfsHash = _newIpfsHash;
     }
+
+    function addToWhitelist(address _address) external onlyLauncher {
+        register.addToWhitelist(_address);
+    }
+
+    function batchAddToWhitelist(address[] memory _addresses) external onlyLauncher {
+        register.batchAddToWhitelist(_addresses);
+    }
+
+    function removeFromWhitelist(address _address) external onlyLauncher {
+        register.removeFromWhitelist(_address);
+    }
+
 }

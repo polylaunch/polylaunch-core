@@ -5,16 +5,8 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
-import {Decimal} from "../Decimal.sol";
-import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
-import "../venture-bond/VentureBond.sol";
-import "../venture-bond/Market.sol";
 import "../../interfaces/IVentureBond.sol";
-import "../../interfaces/IMarket.sol";
-import "../../interfaces/ICErc20.sol";
-import "../system/PolylaunchConstants.sol";
-import "../venture-bond/VentureBondDataRegistry.sol";
 
 /**
  * @author PolyLaunch Protocol

@@ -4,7 +4,7 @@ pragma experimental ABIEncoderV2;
 import "../../interfaces/IVentureBond.sol";
 import {Counters} from "@openzeppelin/contracts/utils/Counters.sol";
 
-library VentureBondDataRegistry {
+library PreLaunchRegistry {
     using Counters for Counters.Counter;
     struct Register {
         // mapping to store the nft Data by index
@@ -13,6 +13,8 @@ library VentureBondDataRegistry {
         mapping(uint256 => bool) isIndexMinted;
         // mapping to track order of investment
         mapping(address => uint256) supporterIndex;
+        // mapping to track whether an address is whitelisted
+        mapping(address => bool) isWhiteListed;
         // counter to track latest supporterIndex
         Counters.Counter supporterTracker;
     }
@@ -90,5 +92,19 @@ library VentureBondDataRegistry {
         for (uint256 i = 0; i < i_s.length; i++) {
             setNftDataByIndex(self, i_s[i], _nftData[i]);
         }
+    }
+
+    function addToWhitelist(Register storage self, address _address) internal {
+        self.isWhiteListed[_address] = true;
+    }
+
+    function batchAddToWhitelist(Register storage self, address[] memory _addresses) internal {
+        for (uint256 i = 0; i < _addresses.length; i++) {
+            addToWhitelist(self, _addresses[i]);
+        }
+    }
+
+    function removeFromWhitelist(Register storage self, address _address) internal {
+        self.isWhiteListed[_address] = false;
     }
 }

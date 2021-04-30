@@ -12,7 +12,7 @@ import {IVentureBond} from "../../interfaces/IVentureBond.sol";
 import {PolylaunchConstants} from "../system/PolylaunchConstants.sol";
 import {IMarket} from "../../interfaces/IMarket.sol";
 import {ILaunchFactory} from "../../interfaces/ILaunchFactory.sol";
-import {VentureBondDataRegistry} from "../venture-bond/VentureBondDataRegistry.sol";
+import {PreLaunchRegistry} from "./PreLaunchRegistry.sol";
 
 import "../../interfaces/IPolyVault.sol";
 import "../../interfaces/ILaunchFactory.sol";
@@ -168,7 +168,7 @@ library LaunchRedemption {
      */
     function claim(
         LaunchUtils.Data storage self,
-        VentureBondDataRegistry.Register storage register
+        PreLaunchRegistry.Register storage register
     ) internal {
         require(
             block.timestamp > self.END,
@@ -207,7 +207,7 @@ library LaunchRedemption {
      */
     function _claimVentureBond(
         LaunchUtils.Data storage self,
-        VentureBondDataRegistry.Register storage register
+        PreLaunchRegistry.Register storage register
     ) private {
         uint256 userProvided = self.provided[msg.sender];
         

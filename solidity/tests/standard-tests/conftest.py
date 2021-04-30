@@ -17,7 +17,7 @@ from brownie import (
     PolylaunchConstants,
     PolylaunchSystem,
     PolylaunchSystemAuthority,
-    VentureBondDataRegistry,
+    PreLaunchRegistry,
     VentureBond,
     Market,
     PolyVault,
@@ -35,7 +35,7 @@ from brownie import (
 def deployed_factory(usd_contract, accounts):
     deployer = accounts.at("0xC3D6880fD95E06C817cB030fAc45b3fae3651Cb0", force=True)
     constants = PolylaunchConstants.deploy({"from": deployer})
-    registry = VentureBondDataRegistry.deploy({"from": deployer})
+    registry = PreLaunchRegistry.deploy({"from": deployer})
     utils = LaunchUtils.deploy({"from": deployer})
     redemption = LaunchRedemption.deploy({"from": deployer})
     logger = LaunchLogger.deploy({"from": deployer})

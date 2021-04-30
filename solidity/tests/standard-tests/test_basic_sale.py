@@ -37,7 +37,6 @@ def test_create_basic_launch(mint_dummy_token, deployed_factory, accounts):
             constants.MINIMUM_FUNDING,
             constants.INITIAL_DEV_VESTING,
             constants.INITIAL_INV_VESTING,
-            constants.FUNDING_CAP,
             constants.INDIVIDUAL_FUNDING_CAP,
             constants.FIXED_SWAP_RATE,
             constants.GENERIC_NFT_DATA,
@@ -75,7 +74,6 @@ def test_create_basic_launch_fails_with_bad_nft_data(
                     constants.MINIMUM_FUNDING,
                     constants.INITIAL_DEV_VESTING,
                     constants.INITIAL_INV_VESTING,
-                    constants.FUNDING_CAP,
                     constants.INDIVIDUAL_FUNDING_CAP,
                     constants.FIXED_SWAP_RATE,
                     nftData,
@@ -266,9 +264,16 @@ def test_investors_claim_nft_after_successful_launch(
             venture_bond_contract.lastWithdrawnTime(token_id, {"from": inv})
             == constants.END_DATE
         )
-        assert (round(
-            venture_bond_contract.tapRate(token_id, {"from": inv})
-            - int(((constants.INVESTMENT_AMOUNT * constants.FIXED_SWAP_RATE) / 1e18)/constants.INITIAL_INV_VESTING) , -2) == 0
+        assert (
+            round(
+                venture_bond_contract.tapRate(token_id, {"from": inv})
+                - int(
+                    ((constants.INVESTMENT_AMOUNT * constants.FIXED_SWAP_RATE) / 1e18)
+                    / constants.INITIAL_INV_VESTING
+                ),
+                -2,
+            )
+            == 0
         )
         assert (
             venture_bond_contract.tappableBalance(token_id, {"from": inv})

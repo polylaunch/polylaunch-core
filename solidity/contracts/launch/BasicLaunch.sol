@@ -121,11 +121,6 @@ contract BasicLaunch is PolyVault, ReentrancyGuard {
             launchInfo._minimumFunding > 0,
             "The minimum funding amount must be greater than 0"
         );
-        require(
-            (launchInfo._fundingCap.mul(launchInfo._fixedSwapRate)).div(1e18) <=
-                launchInfo._totalForSale,
-            "Insufficient tokens provided for the given swap rate"
-        );
 
         self.launchId = _launchId;
         self.polylaunchSystem = _system;
@@ -135,7 +130,9 @@ contract BasicLaunch is PolyVault, ReentrancyGuard {
         self.START = launchInfo._startDate;
         self.END = launchInfo._endDate;
         self.MINIMUM_FUNDING = launchInfo._minimumFunding;
-        self.FUNDING_CAP = launchInfo._fundingCap;
+        self.FUNDING_CAP = launchInfo._totalForSale.mul(1e18).div(
+            launchInfo._fixedSwapRate
+        );
         self.INDIVIDUAL_FUNDING_CAP = launchInfo._individualFundingCap == 0
             ? 2 ^ (256 - 1)
             : launchInfo._individualFundingCap;
@@ -477,5 +474,4 @@ contract BasicLaunch is PolyVault, ReentrancyGuard {
     function updateIpfsHash(string memory _newIpfsHash) public onlyLauncher {
         self.ipfsHash = _newIpfsHash;
     }
-
 }

@@ -200,32 +200,6 @@ library LaunchUtils {
         return self.TOKEN;
     }
 
-    /**
-     * @notice return the VentureBond address associated with the launch
-     * @param self Data struct associated with the launch
-     * @return the VentureBond address associated with the launch
-     */
-    function launchVentureBondAddress(Data storage self)
-        internal
-        view
-        returns (address)
-    {
-        return self.ventureBondAddress;
-    }
-
-    /**
-     * @notice return the market address associated with the launch
-     * @param self Data struct associated with the launch
-     * @return the market address associated with the launch
-     */
-    function launchMarketAddress(Data storage self)
-        internal
-        view
-        returns (address)
-    {
-        return self.marketAddress;
-    }
-
     function min(uint256 a, uint256 b) internal pure returns (uint256) {
         return a < b ? a : b;
     }

@@ -335,11 +335,27 @@ contract BasicLaunch is PolyVault, ReentrancyGuard {
     }
 
     /**
+     * @notice View function to return the launcher vesting period (seconds)
+     * @return number of seconds for launcher vesting period
+     */
+    function launcherVestingPeriod() public view returns (uint256) {
+        return self.launcherVestingPeriod;
+    }
+
+    /**
+     * @notice View function to return the supporter vesting period (seconds)
+     * @return number of seconds for supporter vesting period
+     */
+    function supporterVestingPeriod() public view returns (uint256) {
+        return self.supporterVestingPeriod;
+    }
+
+    /**
      * @notice View function to return the address of the VentureBond contract associated with the launch
      * @return VentureBond contract associated with the launch
      */
     function launchVentureBondAddress() external view returns (address) {
-        return self.launchVentureBondAddress();
+        return self.ventureBondAddress;
     }
 
     /**
@@ -347,7 +363,7 @@ contract BasicLaunch is PolyVault, ReentrancyGuard {
      * @return Market contract associated with the launch
      */
     function launchMarketAddress() external view returns (address) {
-        return self.launchMarketAddress();
+        return self.marketAddress;
     }
 
     /**

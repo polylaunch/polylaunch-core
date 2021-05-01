@@ -1,0 +1,62 @@
+[
+{
+  "name": "Pineapple Finance",
+  "logo": "https://i.imgur.com/UOvQTLa.png",
+  "website": "https://ethereum.org",
+  "banner": "https://terminalco.wpcomstaging.com/wp-content/uploads/2020/03/Artboard-1.png",
+  "twitter": "ethereum",
+  "github": "testgithub",
+  "introduction": "Founded in 2021, this is a test introduction..",
+  "keyFeatures": "This is a key features test.."
+},
+{
+  "name": "Pear Protocol",
+  "logo": "https://i.imgur.com/UOvQTLa.png",
+  "website": "https://ethereum.org",
+  "banner": "https://terminalco.wpcomstaging.com/wp-content/uploads/2020/03/Artboard-1.png",
+  "twitter": "ethereum",
+  "github": "testgithub",
+  "introduction": "Founded in 2021, this is a test introduction..",
+  "keyFeatures": "This is a key features test.."
+},
+{
+  "name": "Mango Money",
+  "logo": "https://i.imgur.com/UOvQTLa.png",
+  "website": "https://mango.org",
+  "banner": "https://terminalco.wpcomstaging.com/wp-content/uploads/2020/03/Artboard-1.png",
+  "twitter": "mangom",
+  "github": "mangom",
+  "introduction": "Founded in 2021, this is a test introduction..",
+  "keyFeatures": "This is a key features test.."
+},
+{
+  "name": "Apple Fi",
+  "logo": "https://i.imgur.com/UOvQTLa.png",
+  "website": "https://apple.org",
+  "banner": "https://terminalco.wpcomstaging.com/wp-content/uploads/2020/03/Artboard-1.png",
+  "twitter": "appfi",
+  "github": "applegithub",
+  "introduction": "Founded in 2021, this is a test introduction..",
+  "keyFeatures": "This is a key features test.."
+},
+{
+  "name": "Etherstarter",
+  "logo": "https://i.imgur.com/UOvQTLa.png",
+  "website": "https://ethstart.org",
+  "banner": "https://terminalco.wpcomstaging.com/wp-content/uploads/2020/03/Artboard-1.png",
+  "twitter": "ethestarter",
+  "github": "ethgithub",
+  "introduction": "Founded in 2021, this is a test introduction..",
+  "keyFeatures": "This is a key features test.."
+},
+{
+  "name": "Bitcoin Cash Squared",
+  "logo": "https://i.imgur.com/UOvQTLa.png",
+  "website": "https://bcs.org",
+  "banner": "https://terminalco.wpcomstaging.com/wp-content/uploads/2020/03/Artboard-1.png",
+  "twitter": "bcs",
+  "github": "bcs",
+  "introduction": "Founded in 2021, this is a test introduction..",
+  "keyFeatures": "This is a key features test.."
+},
+]

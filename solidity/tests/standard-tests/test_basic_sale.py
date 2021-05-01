@@ -92,7 +92,22 @@ def test_setting_bad_nft_data_should_fail(running_launch, accounts):
         running_launch.batchSetNftDataByIndex(
             [0, 1, 2], constants.FAILURE_NFT_DATA, {"from": accounts[0]}
         )
+        
 
+def test_no_send_if_not_whitelisted(
+    running_launch, accounts, send_1000_usd_to_accounts
+):
+    investors = accounts[2:10]
+    start_delta = constants.START_DATE - time.time()
+    running_launch.batchAddToWhitelist(investors, {"from": accounts[0]})
+    brownie.chain.sleep(int(start_delta) + 1)
+    send_1000_usd_to_accounts.increaseAllowance(
+        running_launch, constants.LOW_INPUT_AMOUNT, {"from": accounts[1]}
+    )
+    with brownie.reverts("msg.sender not whitelisted"):
+        running_launch.sendUSD(constants.LOW_INPUT_AMOUNT, {"from": accounts[1]})
+
+    
 
 def test_receive_usd_from_same_twice(
     running_launch, send_1000_usd_to_accounts, accounts
@@ -101,7 +116,7 @@ def test_receive_usd_from_same_twice(
     investors = accounts[1:4]
     start_time = running_launch.launchStartTime({"from": accounts[1]})
     end_time = running_launch.launchEndTime({"from": accounts[1]})
-
+    running_launch.batchAddToWhitelist(investors, {"from": accounts[0]})
     start_delta = start_time - time.time() + 1
     brownie.chain.sleep(start_delta)
     running_launch.batchSetNftDataByIndex(
@@ -141,7 +156,7 @@ def test_receive_usd_during_offering(
 
     start_delta = start_time - time.time() + 1
     brownie.chain.sleep(start_delta)
-
+    running_launch.batchAddToWhitelist([accounts[1], accounts[2], accounts[3]], {"from": accounts[0]})
     number_of_investors = 3
     delta = int((end_time - start_time) / number_of_investors)
 
@@ -199,6 +214,7 @@ def test_investors_can_claim_after_unsuccessful_launch(
     investors = accounts[1:10]
     launch_contract = running_launch
     start_delta = constants.START_DATE - time.time()
+    launch_contract.batchAddToWhitelist(investors, {"from": accounts[0]})
     # Sleep until it finishes
     brownie.chain.sleep(int(start_delta) + 1)
     for account in investors:
@@ -220,6 +236,7 @@ def test_nft_not_minted_on_failed_launch(
     investors = accounts[1:10]
     launch_contract = running_launch
     start_delta = constants.START_DATE - time.time()
+    launch_contract.batchAddToWhitelist(investors, {"from": accounts[0]})
     # Sleep until it finishes
     brownie.chain.sleep(int(start_delta) + 1)
     for account in investors:
@@ -384,11 +401,11 @@ def test_launcher_withdraw_unsold_tokens_succeeds(
 ):
     tx = []
     investors = accounts[1:9]
-
+    running_launch.batchAddToWhitelist(investors, {"from": accounts[0]})
     # wait for it to start
     start_delta = constants.START_DATE - time.time()
     brownie.chain.sleep(int(start_delta) + 1)
-
+    
     for n, account in enumerate(investors):
         send_1000_usd_to_accounts.increaseAllowance(
             running_launch, 1000e18 + n * 100e18, {"from": account}
@@ -442,7 +459,7 @@ def test_investors_tap_nft_after_failed_launch(
     investors = accounts[1:10]
     launch_contract = running_launch
     start_delta = constants.START_DATE - time.time()
-
+    launch_contract.batchAddToWhitelist(investors, {"from": accounts[0]})
     brownie.chain.sleep(int(start_delta) + 1)
     for account in investors:
         send_1000_usd_to_accounts.increaseAllowance(
@@ -455,5 +472,3 @@ def test_investors_tap_nft_after_failed_launch(
         launch_contract.supporterTap(0, {"from": accounts[1]})
 
 
-# def test_launcher_withdraws_after_failed_launch():
-#

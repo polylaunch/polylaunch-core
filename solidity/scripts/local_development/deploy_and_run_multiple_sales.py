@@ -141,6 +141,7 @@ def main():
 
         for n, acc in enumerate(accounts[:8]):
             if n != current_sale_owner:
+                BasicLaunch.at(launch.return_value).addToWhitelist(acc, {"from": accounts[i]})
                 dai_contract.approve(
                     launch.return_value, 1000e18 * random_multiplier, {"from": acc}
                 )

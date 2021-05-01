@@ -132,7 +132,7 @@ def alt_launch_minted(accounts, deployed_factory, send_any_usd_to_accounts):
     # wait for it to start
     start_delta = constants.START_DATE - time.time()
     chain.sleep(int(start_delta) + 1)
-
+    launch.batchAddToWhitelist(investors, {"from": accounts[0]})
     for account in investors:
         send_any_usd_to_accounts.increaseAllowance(launch, 1000e18, {"from": account})
         launch.sendUSD(1000e18, {"from": account})
@@ -179,7 +179,7 @@ def successful_launch(running_launch, send_1000_usd_to_accounts, accounts):
     # wait for it to start
     start_delta = constants.START_DATE - time.time()
     chain.sleep(int(start_delta) + 1)
-
+    running_launch.batchAddToWhitelist(investor_accounts, {"from": accounts[0]})
     for account in investor_accounts:
         send_1000_usd_to_accounts.increaseAllowance(
             running_launch, 1000e18, {"from": account}

@@ -165,7 +165,7 @@ contract BasicLaunch is PolyVault, ReentrancyGuard {
     function sendUSD(uint256 amount) external {
         require(block.timestamp >= self.START, "Launch not started");
         require(block.timestamp < self.END, "Launch has ended");
-        require(register.isWhiteListed[msg.sender], "You are not whitelisted");
+        require(register.isWhiteListed[msg.sender], "msg.sender not whitelisted");
         require(
             self.totalFunding.add(amount) <= self.FUNDING_CAP,
             "Launch has reached funding cap"

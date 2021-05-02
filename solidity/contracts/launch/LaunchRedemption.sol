@@ -12,7 +12,7 @@ import {IVentureBond} from "../../interfaces/IVentureBond.sol";
 import {PolylaunchConstants} from "../system/PolylaunchConstants.sol";
 import {IMarket} from "../../interfaces/IMarket.sol";
 import {ILaunchFactory} from "../../interfaces/ILaunchFactory.sol";
-import {VentureBondDataRegistry} from "../venture-bond/VentureBondDataRegistry.sol";
+import {PreLaunchRegistry} from "./PreLaunchRegistry.sol";
 
 import "../../interfaces/IPolyVault.sol";
 import "../../interfaces/ILaunchFactory.sol";
@@ -45,7 +45,7 @@ library LaunchRedemption {
             IPolyVault(address(this))._launcherYieldTap(
                 vaultRegistry,
                 self.launcherTapRate,
-                self.USD,
+                self.stable,
                 self.fundRecipient,
                 self.polylaunchSystem
             );
@@ -54,7 +54,7 @@ library LaunchRedemption {
             uint256 withdrawable = LaunchUtils.getLauncherWithdrawableFunds(self);
             require(withdrawable > 0, "There are no funds to withdraw");
             self.lastWithdrawn = block.timestamp;
-            self.USD.safeTransfer(self.fundRecipient, withdrawable);
+            self.stable.safeTransfer(self.fundRecipient, withdrawable);
 
             LaunchLogger(self.polylaunchSystem).logLauncherFundsTapped(
                 address(this),
@@ -169,7 +169,7 @@ library LaunchRedemption {
      */
     function claim(
         LaunchUtils.Data storage self,
-        VentureBondDataRegistry.Register storage register
+        PreLaunchRegistry.Register storage register
     ) internal {
         require(
             block.timestamp > self.END,
@@ -192,7 +192,7 @@ library LaunchRedemption {
         } else {
             uint256 userProvided = self.provided[msg.sender];
             self.provided[msg.sender] = 0;
-            self.USD.safeTransfer(msg.sender, userProvided);
+            self.stable.safeTransfer(msg.sender, userProvided);
             LaunchLogger(self.polylaunchSystem).logFundsWithdrawn(
                 address(this),
                 msg.sender,
@@ -209,7 +209,7 @@ library LaunchRedemption {
      */
     function _claimVentureBond(
         LaunchUtils.Data storage self,
-        VentureBondDataRegistry.Register storage register
+        PreLaunchRegistry.Register storage register
     ) private {
         uint256 userProvided = self.provided[msg.sender];
         

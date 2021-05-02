@@ -16,7 +16,7 @@ from brownie import (
     PolylaunchConstants,
     PolylaunchSystem,
     PolylaunchSystemAuthority,
-    VentureBondDataRegistry,
+    PreLaunchRegistry,
     PolyVaultRegistry,
     GovernorAlpha,
     VentureBond,
@@ -97,7 +97,7 @@ def deployed_factory(dai, accounts, cdai, ydai):
     deployer = accounts.at("0xC3D6880fD95E06C817cB030fAc45b3fae3651Cb0", force=True)
 
     constants_ = PolylaunchConstants.deploy({"from": deployer})
-    registry = VentureBondDataRegistry.deploy({"from": deployer})
+    registry = PreLaunchRegistry.deploy({"from": deployer})
     utils = LaunchUtils.deploy({"from": deployer})
     redemption = LaunchRedemption.deploy({"from": deployer})
     logger = LaunchLogger.deploy({"from": deployer})
@@ -181,12 +181,12 @@ def successful_launch(running_launch, send_10_eth_of_dai_to_accounts, accounts):
     # wait for it to start
     start_delta = constants.START_DATE - time.time()
     chain.sleep(int(start_delta) + 1)
-
+    running_launch.batchAddToWhitelist(investor_accounts, {"from": accounts[0]})
     for account in investor_accounts:
         send_10_eth_of_dai_to_accounts.approve(
             running_launch, 1000e18, {"from": account}
         )
-        running_launch.sendUSD(1000e18, {"from": account})
+        running_launch.sendStable(1000e18, {"from": account})
 
     chain.sleep(int(constants.END_DATE - constants.START_DATE) + 1)
     yield running_launch, send_10_eth_of_dai_to_accounts
@@ -194,21 +194,21 @@ def successful_launch(running_launch, send_10_eth_of_dai_to_accounts, accounts):
 
 @pytest.fixture(scope="function")
 def success_launch_comp(successful_launch, send_10_eth_of_dai_to_accounts, accounts):
-    launch_contract, usd_contract = successful_launch
+    launch_contract, stable_contract = successful_launch
     launch_contract.deposit(1, {"from": accounts[0]})
     yield launch_contract
 
 
 @pytest.fixture(scope="function")
 def success_launch_yearn(successful_launch, send_10_eth_of_dai_to_accounts, accounts):
-    launch_contract, usd_contract = successful_launch
+    launch_contract, stable_contract = successful_launch
     launch_contract.deposit(2, {"from": accounts[0]})
     yield launch_contract
 
 
 @pytest.fixture(scope="function")
 def success_launch_aave(successful_launch, send_10_eth_of_dai_to_accounts, accounts):
-    launch_contract, usd_contract = successful_launch
+    launch_contract, stable_contract = successful_launch
     launch_contract.deposit(3, {"from": accounts[0]})
     yield launch_contract
 

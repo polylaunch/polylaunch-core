@@ -317,3 +317,7 @@ def test_claim_refund_after_succeeded_proposal_succeeds(
 
     assert tx.return_value == 1000e18
     assert "RefundClaimed" in tx.events
+    launcher_balance_before = token_contract.balanceOf(accounts[0])
+    launch.launcherClaimRefund( {"from": accounts[0]})
+    launcher_balance_after = token_contract.balanceOf(accounts[0])
+    assert launcher_balance_after > launcher_balance_before

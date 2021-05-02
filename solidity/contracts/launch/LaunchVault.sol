@@ -43,7 +43,7 @@ library LaunchVault {
             self.launchSuccessful,
             "LaunchVault: The launch was not successful or has not concluded"
         );
-        uint256 _startingBalance = self.USD.balanceOf(address(this));
+        uint256 _startingBalance = self.stable.balanceOf(address(this));
         require(
             _startingBalance != 0,
             "LaunchVault: No funds to deposit into the Vault"
@@ -54,7 +54,7 @@ library LaunchVault {
             vaultRegistry,
             vaultId,
             _startingBalance,
-            self.USD,
+            self.stable,
             self.polylaunchSystem
         );
         self.yieldActivated = true;
@@ -68,7 +68,7 @@ library LaunchVault {
         require(self.yieldActivated, "LaunchVault: Yield has not been activated");
         address vaultRegistry =
             ILaunchFactory(self.launchFactory).getVaultRegistryAddress();
-        IPolyVault(address(this))._exitFromVault(vaultRegistry, self.USD, self.polylaunchSystem);
+        IPolyVault(address(this))._exitFromVault(vaultRegistry, self.stable, self.polylaunchSystem);
         self.yieldActivated = false;
     }
 

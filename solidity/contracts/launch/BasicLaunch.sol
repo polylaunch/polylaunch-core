@@ -10,7 +10,7 @@ import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 
 import "./LaunchUtils.sol";
-import "../venture-bond/VentureBondDataRegistry.sol";
+import "./PreLaunchRegistry.sol";
 import "../venture-bond/Market.sol";
 import "../../interfaces/IVentureBond.sol";
 import "../../interfaces/IMarket.sol";
@@ -35,12 +35,13 @@ contract BasicLaunch is PolyVault, ReentrancyGuard {
     using LaunchGovernance for LaunchUtils.Data;
     using LaunchVault for LaunchUtils.Data;
 
-    using VentureBondDataRegistry for VentureBondDataRegistry.Register;
+    using PreLaunchRegistry for PreLaunchRegistry.Register;
 
     // storage struct for all information pertaining to a particular Launch
     LaunchUtils.Data self;
 
-    VentureBondDataRegistry.Register register;
+    // storage struct for all nft data and whitelist
+    PreLaunchRegistry.Register register;
 
     // variable to ensure that the setOwnership is only called once
     bool private ownershipSet;
@@ -101,7 +102,7 @@ contract BasicLaunch is PolyVault, ReentrancyGuard {
      * @dev can only be called once
      */
     function init(
-        IERC20 _usd,
+        IERC20 _stable,
         ILaunchFactory.LaunchInfo memory launchInfo,
         address _ventureBondContract,
         address _marketContract,
@@ -124,7 +125,7 @@ contract BasicLaunch is PolyVault, ReentrancyGuard {
 
         self.launchId = _launchId;
         self.polylaunchSystem = _system;
-        self.USD = _usd;
+        self.stable = _stable;
         self.TOKEN = launchInfo._token;
         self.TOTAL_TOKENS_FOR_SALE = launchInfo._totalForSale;
         self.START = launchInfo._startDate;
@@ -161,9 +162,10 @@ contract BasicLaunch is PolyVault, ReentrancyGuard {
      * @notice Allows an address to send in DAI to invest in the DAICO
      * @param amount the amount the address would like to invest
      */
-    function sendUSD(uint256 amount) external {
+    function sendStable(uint256 amount) external {
         require(block.timestamp >= self.START, "Launch not started");
         require(block.timestamp < self.END, "Launch has ended");
+        require(register.isWhiteListed[msg.sender], "msg.sender not whitelisted");
         require(
             self.totalFunding.add(amount) <= self.FUNDING_CAP,
             "Launch has reached funding cap"
@@ -174,7 +176,7 @@ contract BasicLaunch is PolyVault, ReentrancyGuard {
             "You have reached the individual funding cap"
         );
         require(
-            self.USD.transferFrom(msg.sender, address(this), amount),
+            self.stable.transferFrom(msg.sender, address(this), amount),
             "Token transfer failed"
         );
         if (self.provided[msg.sender] == 0) {
@@ -453,25 +455,45 @@ contract BasicLaunch is PolyVault, ReentrancyGuard {
     }
 
     /**
-     * @notice Puts the launch into refund mode, which allows contributors to claim back their USD proportional to their token balance
+     * @notice Puts the launch into refund mode, which allows contributors to claim back their stable proportional to their token balance
      */
     function initiateRefundMode() public onlyGovernor {
         self.initiateRefundMode();
     }
 
     /**
-     * @notice Allows venture bond owners to claim a USD refund if the launch is in refund mode.
+     * @notice Allows venture bond owners to claim a stable refund if the launch is in refund mode.
      * @param tokenId id of the venture bond to claim the refund against
      */
-    function claimRefund(uint256 tokenId) public returns (uint256) {
+    function claimRefund(uint256 tokenId) external nonReentrant returns (uint256) {
         return self.claimRefund(tokenId);
+    }
+
+    /**
+     * @notice Allows launcher to claim back refunded tokens
+     */
+    function launcherClaimRefund() external onlyLauncher{
+        return self.launcherClaimRefund();
     }
 
     /**
      * @notice Allows launcher to update the ipfs hash containing the project description
      * @param _newIpfsHash ipfs hash containing the new project details
      */
-    function updateIpfsHash(string memory _newIpfsHash) public onlyLauncher {
+    function updateIpfsHash(string memory _newIpfsHash) external onlyLauncher {
         self.ipfsHash = _newIpfsHash;
     }
+
+    function addToWhitelist(address _address) external onlyLauncher {
+        register.addToWhitelist(_address);
+    }
+
+    function batchAddToWhitelist(address[] memory _addresses) external onlyLauncher {
+        register.batchAddToWhitelist(_addresses);
+    }
+
+    function removeFromWhitelist(address _address) external onlyLauncher {
+        register.removeFromWhitelist(_address);
+    }
+
 }

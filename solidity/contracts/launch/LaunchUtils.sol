@@ -5,16 +5,8 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
-import {Decimal} from "../Decimal.sol";
-import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
-import "../venture-bond/VentureBond.sol";
-import "../venture-bond/Market.sol";
 import "../../interfaces/IVentureBond.sol";
-import "../../interfaces/IMarket.sol";
-import "../../interfaces/ICErc20.sol";
-import "../system/PolylaunchConstants.sol";
-import "../venture-bond/VentureBondDataRegistry.sol";
 
 /**
  * @author PolyLaunch Protocol
@@ -31,8 +23,8 @@ library LaunchUtils {
         uint256 launchId;
         // whether a launch is initialised
         bool initialised;
-        // contract for dai/usd (accepted investment currency)
-        IERC20 USD;
+        // contract for dai/stable (accepted investment currency)
+        IERC20 stable;
         // contract for token being sold
         IERC20 TOKEN;
         // start date for the launch
@@ -55,7 +47,7 @@ library LaunchUtils {
         uint256 launcherVestingPeriod;
         // supporter initial vested period (in seconds)
         uint256 supporterVestingPeriod;
-        // launcher who will receive USD funds
+        // launcher who will receive stable funds
         address fundRecipient;
         // mapping to hold the amount an address has provided to the launch in DAI
         mapping(address => uint256) provided;
@@ -83,6 +75,8 @@ library LaunchUtils {
         bool yieldActivated;
         // is the contract in refund mode
         bool isRefundMode;
+        // number of refundable tokens a launcher can withdraw
+        uint256 refundableTokens;
         // polylaunch system address
         address polylaunchSystem;
         // hash storing launch details such as name, logo, description
@@ -103,12 +97,12 @@ library LaunchUtils {
         if (!self.launchSuccessful) {
             return 0;
         }
-        uint256 usdBalance = self.USD.balanceOf(address(this));
+        uint256 stableBalance = self.stable.balanceOf(address(this));
         uint256 withdrawable =
             self.launcherTapRate.mul(block.timestamp.sub(self.lastWithdrawn));
 
-        if (usdBalance < withdrawable) {
-            withdrawable = usdBalance;
+        if (stableBalance < withdrawable) {
+            withdrawable = stableBalance;
         }
         return withdrawable;
     }

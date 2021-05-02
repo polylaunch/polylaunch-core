@@ -44,7 +44,7 @@ contract PolylaunchSystem is Ownable, LaunchLogger {
     );
 
     constructor(
-        IERC20 usd,
+        IERC20 stable,
         address basicLaunch,
         address governor
     ) {
@@ -60,7 +60,7 @@ contract PolylaunchSystem is Ownable, LaunchLogger {
         launchFactory.setVentureBondAddress(address(ventureBond));
         launchFactory.setBaseGovernorAddress(governor);
         launchFactory.setVaultRegistryAddress(address(vaultRegistry));
-        launchFactory.setUsdContract(usd);
+        launchFactory.setStableContract(stable);
 
         emit PolylaunchSystemLaunched(
             address(launchFactory),

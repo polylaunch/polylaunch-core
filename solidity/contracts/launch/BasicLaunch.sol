@@ -465,15 +465,22 @@ contract BasicLaunch is PolyVault, ReentrancyGuard {
      * @notice Allows venture bond owners to claim a USD refund if the launch is in refund mode.
      * @param tokenId id of the venture bond to claim the refund against
      */
-    function claimRefund(uint256 tokenId) public returns (uint256) {
+    function claimRefund(uint256 tokenId) external nonReentrant returns (uint256) {
         return self.claimRefund(tokenId);
+    }
+
+    /**
+     * @notice Allows launcher to claim back refunded tokens
+     */
+    function launcherClaimRefund() external onlyLauncher{
+        return self.launcherClaimRefund();
     }
 
     /**
      * @notice Allows launcher to update the ipfs hash containing the project description
      * @param _newIpfsHash ipfs hash containing the new project details
      */
-    function updateIpfsHash(string memory _newIpfsHash) public onlyLauncher {
+    function updateIpfsHash(string memory _newIpfsHash) external onlyLauncher {
         self.ipfsHash = _newIpfsHash;
     }
 

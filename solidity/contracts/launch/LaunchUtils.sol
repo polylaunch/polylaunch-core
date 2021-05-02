@@ -75,6 +75,8 @@ library LaunchUtils {
         bool yieldActivated;
         // is the contract in refund mode
         bool isRefundMode;
+        // number of refundable tokens a launcher can withdraw
+        uint256 refundableTokens;
         // polylaunch system address
         address polylaunchSystem;
         // hash storing launch details such as name, logo, description

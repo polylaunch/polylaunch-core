@@ -58,10 +58,10 @@ library LaunchGovernance {
             IVentureBond(self.ventureBondAddress).launchAddressAssociatedWithToken(tokenId) == address(this),
             "claimRefund: ventureBond not associated with this launch"
         );
-
+        uint256 walletBalance = self.TOKEN.balanceOf(msg.sender);
         uint256 totalSenderBalance =
             IVentureBond(self.ventureBondAddress).tappableBalance(tokenId).add(
-                self.TOKEN.balanceOf(msg.sender)
+                walletBalance
             );
         uint256 bondVotingPower =
             IVentureBond(self.ventureBondAddress).votingPower(tokenId);
@@ -74,19 +74,21 @@ library LaunchGovernance {
             );
         uint256 tappableBalance =
             IVentureBond(self.ventureBondAddress).tappableBalance(tokenId);
-        // TODO: make this a burn instead of transferring to the launch contract
+        
         if (totalSenderBalance > bondVotingPower) {
-            self.TOKEN.transferFrom(
+            self.TOKEN.safeTransferFrom(
                 msg.sender,
                 address(this),
                 refundableBalance.sub(tappableBalance)
             );
+            self.refundableTokens = self.refundableTokens.add(refundableBalance);
         } else {
-            self.TOKEN.transferFrom(
+            self.TOKEN.safeTransferFrom(
                 msg.sender,
                 address(this),
-                self.TOKEN.balanceOf(msg.sender)
+                walletBalance
             );
+            self.refundableTokens = self.refundableTokens.add(refundableBalance);
         }
 
         self.totalVotingPower.sub(refundableBalance);
@@ -129,5 +131,23 @@ library LaunchGovernance {
             newRate
         );
         self.launcherTapRate = newRate;
+    }
+
+    /**
+     * @notice allows the launcher to claim back any refunded tokens
+     * @param self Data struct associated with the launch
+     */
+    function launcherClaimRefund(LaunchUtils.Data storage self) internal {
+        require(
+            self.isRefundMode == true,
+            "claimRefund: Launch is not in refund mode"
+        );
+        uint256 redeemable = self.refundableTokens;
+        self.refundableTokens = 0;
+        self.TOKEN.safeTransferFrom(
+                address(this),
+                msg.sender,
+                redeemable
+        );
     }
 }

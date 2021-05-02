@@ -44,7 +44,7 @@ def get_external_dependencies():
 def fake_dai():
     contract = BasicERC20.deploy("Dai Stablecoin", "DAI", {"from": accounts[0]})
     for account in accounts:
-        usd_contract.mint(10000e18, {"from": account})
+        contract.mint(10000e18, {"from": account})
 
 
 def main():

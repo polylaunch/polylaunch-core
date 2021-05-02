@@ -19,7 +19,7 @@ library LaunchGovernance {
     using LaunchUtils for LaunchUtils.Data;
 
     /**
-     * @notice Puts the launch into refund mode, which allows contributors to claim back their USD proportional to their token balance
+     * @notice Puts the launch into refund mode, which allows contributors to claim back their stable proportional to their token balance
      * @param self Data struct associated with the launch
      */
     function initiateRefundMode(LaunchUtils.Data storage self) internal {
@@ -69,7 +69,7 @@ library LaunchGovernance {
         uint256 refundableBalance =
             LaunchUtils.min(totalSenderBalance, bondVotingPower);
         uint256 amountDue =
-            self.USD.balanceOf(address(this)).mul(refundableBalance).div(
+            self.stable.balanceOf(address(this)).mul(refundableBalance).div(
                 self.totalVotingPower
             );
         uint256 tappableBalance =
@@ -105,7 +105,7 @@ library LaunchGovernance {
             );
         }
 
-        self.USD.safeTransfer(msg.sender, amountDue);
+        self.stable.safeTransfer(msg.sender, amountDue);
         LaunchLogger(self.polylaunchSystem).logRefundClaimed(
             address(this),
             msg.sender,

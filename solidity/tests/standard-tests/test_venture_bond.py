@@ -11,7 +11,7 @@ Mint Tests
 
 def test_mint_an_nft(successful_launch, accounts, deployed_factory):
     investors = accounts[1:10]
-    launch_contract, usd_contract = successful_launch
+    launch_contract, stable_contract = successful_launch
     venture_bond_address = launch_contract.launchVentureBondAddress(
         {"from": accounts[0]}
     )
@@ -59,7 +59,7 @@ def test_mint_an_nft(successful_launch, accounts, deployed_factory):
 def test_set_nft_data_and_mint(successful_launch, accounts, deployed_factory):
     special_investor = accounts[1]
     non_special_investor = accounts[2]
-    launch_contract, usd_contract = successful_launch
+    launch_contract, stable_contract = successful_launch
     venture_bond_address = launch_contract.launchVentureBondAddress(
         {"from": accounts[0]}
     )
@@ -90,7 +90,7 @@ def test_set_nft_data_and_mint(successful_launch, accounts, deployed_factory):
 def test_batch_set_nft_data_and_mint(successful_launch, accounts, deployed_factory):
     special_investors = accounts[1:6]
     non_special_investor = accounts[7]
-    launch_contract, usd_contract = successful_launch
+    launch_contract, stable_contract = successful_launch
     venture_bond_address = launch_contract.launchVentureBondAddress(
         {"from": accounts[0]}
     )
@@ -120,7 +120,7 @@ def test_batch_set_nft_data_and_mint(successful_launch, accounts, deployed_facto
 
 
 def test_cannot_mint_manually(successful_launch, accounts):
-    launch_contract, usd_contract = successful_launch
+    launch_contract, stable_contract = successful_launch
     venture_bond_address = launch_contract.launchVentureBondAddress(
         {"from": accounts[0]}
     )
@@ -140,14 +140,14 @@ Set ask Tests
 """
 
 
-def test_should_set_ask(minted_launch, accounts, send_1000_usd_to_accounts):
+def test_should_set_ask(minted_launch, accounts, send_1000_stable_to_accounts):
     investors = accounts[1:10]
     launch_contract, venture_bond_contract = minted_launch
     market_addr = launch_contract.launchMarketAddress({"from": accounts[0]})
     market_contract = brownie.Market.at(market_addr)
     for n, inv in enumerate(investors):
         tx = venture_bond_contract.setAsk(
-            n, [constants.ASK_PRICE, send_1000_usd_to_accounts.address], {"from": inv}
+            n, [constants.ASK_PRICE, send_1000_stable_to_accounts.address], {"from": inv}
         )
         assert "AskCreated" in tx.events
         assert (
@@ -156,39 +156,39 @@ def test_should_set_ask(minted_launch, accounts, send_1000_usd_to_accounts):
         )
         assert (
             market_contract.currentAskForToken(n, {"from": accounts[0]})[1]
-            == send_1000_usd_to_accounts.address
+            == send_1000_stable_to_accounts.address
         )
 
 
-def test_should_reject_if_ask_is_0(minted_launch, accounts, send_1000_usd_to_accounts):
+def test_should_reject_if_ask_is_0(minted_launch, accounts, send_1000_stable_to_accounts):
     launch_contract, venture_bond_contract = minted_launch
 
     with brownie.reverts("Market: Ask invalid for share splitting"):
         venture_bond_contract.setAsk(
-            0, [0, send_1000_usd_to_accounts.address], {"from": accounts[1]}
+            0, [0, send_1000_stable_to_accounts.address], {"from": accounts[1]}
         )
 
 
 def test_should_reject_if_ask_amount_is_invalid_and_cannot_be_split(
-    minted_launch, accounts, send_1000_usd_to_accounts
+    minted_launch, accounts, send_1000_stable_to_accounts
 ):
     launch_contract, venture_bond_contract = minted_launch
 
     with brownie.reverts("Market: Ask invalid for share splitting"):
         venture_bond_contract.setAsk(
-            0, [101, send_1000_usd_to_accounts.address], {"from": accounts[1]}
+            0, [101, send_1000_stable_to_accounts.address], {"from": accounts[1]}
         )
 
 
 def test_should_reject_if_non_token_owner_sets_ask(
-    minted_launch, accounts, send_1000_usd_to_accounts
+    minted_launch, accounts, send_1000_stable_to_accounts
 ):
     launch_contract, venture_bond_contract = minted_launch
 
     with brownie.reverts("VentureBond: Only approved or owner"):
         venture_bond_contract.setAsk(
             0,
-            [constants.ASK_PRICE, send_1000_usd_to_accounts.address],
+            [constants.ASK_PRICE, send_1000_stable_to_accounts.address],
             {"from": accounts[2]},
         )
 
@@ -198,7 +198,7 @@ Remove ask Tests
 """
 
 
-def test_should_remove_the_ask(minted_launch, accounts, send_1000_usd_to_accounts):
+def test_should_remove_the_ask(minted_launch, accounts, send_1000_stable_to_accounts):
     investors = accounts[1:10]
     launch_contract, venture_bond_contract = minted_launch
     market_addr = launch_contract.launchMarketAddress({"from": accounts[0]})
@@ -206,7 +206,7 @@ def test_should_remove_the_ask(minted_launch, accounts, send_1000_usd_to_account
 
     for n, inv in enumerate(investors):
         venture_bond_contract.setAsk(
-            n, [constants.ASK_PRICE, send_1000_usd_to_accounts.address], {"from": inv}
+            n, [constants.ASK_PRICE, send_1000_stable_to_accounts.address], {"from": inv}
         )
         tx = venture_bond_contract.removeAsk(n, {"from": inv})
 
@@ -219,12 +219,12 @@ def test_should_remove_the_ask(minted_launch, accounts, send_1000_usd_to_account
 
 
 def test_should_reject_if_non_token_owner_removes_ask(
-    minted_launch, accounts, send_1000_usd_to_accounts
+    minted_launch, accounts, send_1000_stable_to_accounts
 ):
     launch_contract, venture_bond_contract = minted_launch
     venture_bond_contract.setAsk(
         0,
-        [constants.ASK_PRICE, send_1000_usd_to_accounts.address],
+        [constants.ASK_PRICE, send_1000_stable_to_accounts.address],
         {"from": accounts[1]},
     )
 
@@ -238,7 +238,7 @@ Set Bid Tests
 
 
 def test_should_revert_if_bidder_not_high_enough_allowance_of_bid_currency(
-    minted_launch, accounts, send_any_usd_to_accounts
+    minted_launch, accounts, send_any_stable_to_accounts
 ):
     launch_contract, venture_bond_contract = minted_launch
     bidder = accounts[2]
@@ -248,7 +248,7 @@ def test_should_revert_if_bidder_not_high_enough_allowance_of_bid_currency(
             0,
             [
                 constants.BID_PRICE,
-                send_any_usd_to_accounts.address,
+                send_any_stable_to_accounts.address,
                 bidder,
                 bidder,
                 [0],
@@ -258,7 +258,7 @@ def test_should_revert_if_bidder_not_high_enough_allowance_of_bid_currency(
 
 
 def test_should_revert_if_bidder_not_enough_balance_of_bid_currency(
-    minted_launch, accounts, send_any_usd_to_accounts
+    minted_launch, accounts, send_any_stable_to_accounts
 ):
     launch_contract, venture_bond_contract = minted_launch
     token_for_launch = launch_contract.tokenForLaunch({"from": accounts[0]})
@@ -267,41 +267,41 @@ def test_should_revert_if_bidder_not_enough_balance_of_bid_currency(
     )
     token_contract = brownie.GovernableERC20.at(token_for_launch)
     bidder = accounts[2]
-    send_any_usd_to_accounts.increaseAllowance(
+    send_any_stable_to_accounts.increaseAllowance(
         market_contract, 99999e18, {"from": bidder}
     )
 
     with brownie.reverts("ERC20: transfer amount exceeds balance"):
         venture_bond_contract.setBid(
             0,
-            [99999e18, send_any_usd_to_accounts.address, bidder, bidder, [0]],
+            [99999e18, send_any_stable_to_accounts.address, bidder, bidder, [0]],
             {"from": bidder},
         )
 
 
-def test_should_set_a_bid(minted_launch, accounts, send_any_usd_to_accounts):
+def test_should_set_a_bid(minted_launch, accounts, send_any_stable_to_accounts):
     launch_contract, venture_bond_contract = minted_launch
     market_contract = brownie.Market.at(
         launch_contract.launchMarketAddress({"from": accounts[0]})
     )
     bidder = accounts[2]
-    send_any_usd_to_accounts.increaseAllowance(
+    send_any_stable_to_accounts.increaseAllowance(
         market_contract, constants.BID_PRICE, {"from": bidder}
     )
     tx = venture_bond_contract.setBid(
         0,
-        [constants.BID_PRICE, send_any_usd_to_accounts.address, bidder, bidder, [0]],
+        [constants.BID_PRICE, send_any_stable_to_accounts.address, bidder, bidder, [0]],
         {"from": bidder},
     )
 
     assert "BidCreated" in tx.events
-    assert send_any_usd_to_accounts.balanceOf(bidder, {"from": bidder}) == (
-        constants.USD_AMOUNT - constants.BID_PRICE
+    assert send_any_stable_to_accounts.balanceOf(bidder, {"from": bidder}) == (
+        constants.stable_AMOUNT - constants.BID_PRICE
     )
 
 
 def test_should_automatically_transfer_nft_if_ask_set(
-    minted_launch, accounts, send_any_usd_to_accounts
+    minted_launch, accounts, send_any_stable_to_accounts
 ):
     launch_contract, venture_bond_contract = minted_launch
     market_contract = brownie.Market.at(
@@ -309,61 +309,61 @@ def test_should_automatically_transfer_nft_if_ask_set(
     )
     bidder = accounts[2]
     nft_owner = accounts[1]
-    nft_owner_dai_balance = send_any_usd_to_accounts.balanceOf(
+    nft_owner_dai_balance = send_any_stable_to_accounts.balanceOf(
         nft_owner, {"from": nft_owner}
     )
-    send_any_usd_to_accounts.increaseAllowance(
+    send_any_stable_to_accounts.increaseAllowance(
         market_contract, constants.ASK_PRICE, {"from": bidder}
     )
     venture_bond_contract.setAsk(
-        0, [constants.ASK_PRICE, send_any_usd_to_accounts.address], {"from": nft_owner}
+        0, [constants.ASK_PRICE, send_any_stable_to_accounts.address], {"from": nft_owner}
     )
     venture_bond_contract.setBid(
         0,
-        [constants.ASK_PRICE, send_any_usd_to_accounts.address, bidder, bidder, [0]],
+        [constants.ASK_PRICE, send_any_stable_to_accounts.address, bidder, bidder, [0]],
         {"from": bidder},
     )
 
     assert venture_bond_contract.ownerOf(0, {"from": bidder}) == bidder
-    assert send_any_usd_to_accounts.balanceOf(
+    assert send_any_stable_to_accounts.balanceOf(
         nft_owner, {"from": nft_owner}
     ) == nft_owner_dai_balance + (constants.ASK_PRICE * 0.9)
 
 
 def test_should_refund_bid_if_one_exists_from_bidder(
-    minted_launch, accounts, send_any_usd_to_accounts
+    minted_launch, accounts, send_any_stable_to_accounts
 ):
     launch_contract, venture_bond_contract = minted_launch
     market_contract = brownie.Market.at(
         launch_contract.launchMarketAddress({"from": accounts[0]})
     )
     bidder = accounts[2]
-    send_any_usd_to_accounts.increaseAllowance(
+    send_any_stable_to_accounts.increaseAllowance(
         market_contract, constants.ASK_PRICE, {"from": bidder}
     )
     venture_bond_contract.setBid(
         0,
         [
             constants.ASK_PRICE - 100e18,
-            send_any_usd_to_accounts.address,
+            send_any_stable_to_accounts.address,
             bidder,
             bidder,
             [0],
         ],
         {"from": bidder},
     )
-    bidder_balance_before = send_any_usd_to_accounts.balanceOf(bidder, {"from": bidder})
-    send_any_usd_to_accounts.increaseAllowance(
+    bidder_balance_before = send_any_stable_to_accounts.balanceOf(bidder, {"from": bidder})
+    send_any_stable_to_accounts.increaseAllowance(
         market_contract, constants.ASK_PRICE, {"from": bidder}
     )
     tx = venture_bond_contract.setBid(
         0,
-        [constants.ASK_PRICE, send_any_usd_to_accounts.address, bidder, bidder, [0]],
+        [constants.ASK_PRICE, send_any_stable_to_accounts.address, bidder, bidder, [0]],
         {"from": bidder},
     )
 
     assert (
-        send_any_usd_to_accounts.balanceOf(bidder, {"from": bidder})
+        send_any_stable_to_accounts.balanceOf(bidder, {"from": bidder})
         == bidder_balance_before - 100e18
     )
     assert tx.events["BidCreated"]["bid"]["amount"] == constants.ASK_PRICE
@@ -375,7 +375,7 @@ Remove Bid Tests
 
 
 def test_should_revert_if_bidder_not_placed_a_bid(
-    minted_launch, accounts, send_any_usd_to_accounts
+    minted_launch, accounts, send_any_stable_to_accounts
 ):
     launch_contract, venture_bond_contract = minted_launch
     bidder = accounts[2]
@@ -385,7 +385,7 @@ def test_should_revert_if_bidder_not_placed_a_bid(
 
 
 def test_should_revert_if_token_id_not_created(
-    minted_launch, accounts, send_any_usd_to_accounts
+    minted_launch, accounts, send_any_stable_to_accounts
 ):
     launch_contract, venture_bond_contract = minted_launch
     bidder = accounts[2]
@@ -395,22 +395,22 @@ def test_should_revert_if_token_id_not_created(
 
 
 def test_should_remove_bid_and_refund_bidder(
-    minted_launch_with_bid, accounts, send_any_usd_to_accounts
+    minted_launch_with_bid, accounts, send_any_stable_to_accounts
 ):
     bidder = accounts[2]
     launch_contract, venture_bond_contract = minted_launch_with_bid
-    bidder_balance_before = send_any_usd_to_accounts.balanceOf(bidder, {"from": bidder})
+    bidder_balance_before = send_any_stable_to_accounts.balanceOf(bidder, {"from": bidder})
     tx = venture_bond_contract.removeBid(0, {"from": bidder})
 
     assert "BidRemoved" in tx.events
     assert (
-        send_any_usd_to_accounts.balanceOf(bidder, {"from": bidder})
+        send_any_stable_to_accounts.balanceOf(bidder, {"from": bidder})
         == bidder_balance_before + constants.BID_PRICE
     )
 
 
 def test_should_not_be_able_to_remove_bid_twice(
-    minted_launch_with_bid, accounts, send_any_usd_to_accounts
+    minted_launch_with_bid, accounts, send_any_stable_to_accounts
 ):
     bidder = accounts[2]
     launch_contract, venture_bond_contract = minted_launch_with_bid
@@ -426,29 +426,29 @@ Accept Bid Tests
 
 
 def test_should_accept_bid(
-    minted_launch_with_bid, accounts, send_any_usd_to_accounts, deployed_factory
+    minted_launch_with_bid, accounts, send_any_stable_to_accounts, deployed_factory
 ):
     launch_contract, venture_bond_contract = minted_launch_with_bid
     bidder = accounts[2]
     nft_owner = accounts[1]
-    nft_owner_before_balance = send_any_usd_to_accounts.balanceOf(
+    nft_owner_before_balance = send_any_stable_to_accounts.balanceOf(
         nft_owner, {"from": nft_owner}
     )
     polylaunch_system_addr = deployed_factory.polylaunchSystemAddress(
         {"from": accounts[0]}
     )
-    polylaunch_before_balance = send_any_usd_to_accounts.balanceOf(
+    polylaunch_before_balance = send_any_stable_to_accounts.balanceOf(
         polylaunch_system_addr, {"from": accounts[0]}
     )
     tx = venture_bond_contract.acceptBid(
         0,
-        [constants.BID_PRICE, send_any_usd_to_accounts.address, bidder, bidder, [0]],
+        [constants.BID_PRICE, send_any_stable_to_accounts.address, bidder, bidder, [0]],
         {"from": nft_owner},
     )
-    nft_owner_after_balance = send_any_usd_to_accounts.balanceOf(
+    nft_owner_after_balance = send_any_stable_to_accounts.balanceOf(
         nft_owner, {"from": nft_owner}
     )
-    polylaunch_after_balance = send_any_usd_to_accounts.balanceOf(
+    polylaunch_after_balance = send_any_stable_to_accounts.balanceOf(
         polylaunch_system_addr, {"from": accounts[0]}
     )
 
@@ -465,7 +465,7 @@ def test_should_accept_bid(
 
 
 def test_accept_bid_should_revert_if_not_owner(
-    minted_launch_with_bid, accounts, send_any_usd_to_accounts
+    minted_launch_with_bid, accounts, send_any_stable_to_accounts
 ):
     launch_contract, venture_bond_contract = minted_launch_with_bid
     bidder = accounts[2]
@@ -475,7 +475,7 @@ def test_accept_bid_should_revert_if_not_owner(
             0,
             [
                 constants.BID_PRICE,
-                send_any_usd_to_accounts.address,
+                send_any_stable_to_accounts.address,
                 bidder,
                 bidder,
                 [0],
@@ -485,7 +485,7 @@ def test_accept_bid_should_revert_if_not_owner(
 
 
 def test_accept_bid_should_revert_if_bid_non_existent(
-    minted_launch_with_bid, accounts, send_any_usd_to_accounts
+    minted_launch_with_bid, accounts, send_any_stable_to_accounts
 ):
     launch_contract, venture_bond_contract = minted_launch_with_bid
     bidder = accounts[2]
@@ -494,13 +494,13 @@ def test_accept_bid_should_revert_if_bid_non_existent(
     with brownie.reverts("Market: Unexpected bid found."):
         venture_bond_contract.acceptBid(
             0,
-            [0, send_any_usd_to_accounts.address, bidder, bidder, [0]],
+            [0, send_any_stable_to_accounts.address, bidder, bidder, [0]],
             {"from": nft_owner},
         )
 
 
 def test_accept_bid_should_revert_if_invalid_bid_accepted(
-    minted_launch, accounts, send_any_usd_to_accounts
+    minted_launch, accounts, send_any_stable_to_accounts
 ):
     launch_contract, venture_bond_contract = minted_launch
     bidder = accounts[2]
@@ -508,17 +508,17 @@ def test_accept_bid_should_revert_if_invalid_bid_accepted(
     market_contract = brownie.Market.at(
         launch_contract.launchMarketAddress({"from": accounts[0]})
     )
-    send_any_usd_to_accounts.increaseAllowance(market_contract, 101, {"from": bidder})
+    send_any_stable_to_accounts.increaseAllowance(market_contract, 101, {"from": bidder})
     venture_bond_contract.setBid(
         0,
-        [101, send_any_usd_to_accounts.address, bidder, bidder, [0]],
+        [101, send_any_stable_to_accounts.address, bidder, bidder, [0]],
         {"from": bidder},
     )
 
     with brownie.reverts("Market: Bid invalid for share splitting"):
         venture_bond_contract.acceptBid(
             0,
-            [101, send_any_usd_to_accounts.address, bidder, bidder, [0]],
+            [101, send_any_stable_to_accounts.address, bidder, bidder, [0]],
             {"from": nft_owner},
         )
 
@@ -529,7 +529,7 @@ Transfer tests
 
 
 def test_should_remove_ask_after_transfer(
-    minted_launch, accounts, send_any_usd_to_accounts
+    minted_launch, accounts, send_any_stable_to_accounts
 ):
     investors = accounts[1:10]
     bidder = accounts[2]
@@ -540,7 +540,7 @@ def test_should_remove_ask_after_transfer(
 
     for n, inv in enumerate(investors):
         venture_bond_contract.setAsk(
-            n, [constants.ASK_PRICE, send_any_usd_to_accounts.address], {"from": inv}
+            n, [constants.ASK_PRICE, send_any_stable_to_accounts.address], {"from": inv}
         )
     venture_bond_contract.transferFrom(nft_owner, bidder, 0, {"from": nft_owner})
     assert market_contract.currentAskForToken(0, {"from": accounts[0]})["amount"] == 0

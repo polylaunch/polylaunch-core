@@ -5,7 +5,7 @@ import pytest
 
 
 def test_alt_launch(minted_launch, alt_launch_minted, accounts):
-    alt_launch, usd, nft = alt_launch_minted
+    alt_launch, stable, nft = alt_launch_minted
     launch, _ = minted_launch
     nft_main_id = 0
     nft_alt_id = 9
@@ -95,24 +95,24 @@ def test_setting_bad_nft_data_should_fail(running_launch, accounts):
         
 
 def test_no_send_if_not_whitelisted(
-    running_launch, accounts, send_1000_usd_to_accounts
+    running_launch, accounts, send_1000_stable_to_accounts
 ):
     investors = accounts[2:10]
     start_delta = constants.START_DATE - time.time()
     running_launch.batchAddToWhitelist(investors, {"from": accounts[0]})
     brownie.chain.sleep(int(start_delta) + 1)
-    send_1000_usd_to_accounts.increaseAllowance(
+    send_1000_stable_to_accounts.increaseAllowance(
         running_launch, constants.LOW_INPUT_AMOUNT, {"from": accounts[1]}
     )
     with brownie.reverts("msg.sender not whitelisted"):
-        running_launch.sendUSD(constants.LOW_INPUT_AMOUNT, {"from": accounts[1]})
+        running_launch.sendStable(constants.LOW_INPUT_AMOUNT, {"from": accounts[1]})
 
     
 
-def test_receive_usd_from_same_twice(
-    running_launch, send_1000_usd_to_accounts, accounts
+def test_receive_stable_from_same_twice(
+    running_launch, send_1000_stable_to_accounts, accounts
 ):
-    usd_contract = send_1000_usd_to_accounts
+    stable_contract = send_1000_stable_to_accounts
     investors = accounts[1:4]
     start_time = running_launch.launchStartTime({"from": accounts[1]})
     end_time = running_launch.launchEndTime({"from": accounts[1]})
@@ -123,11 +123,11 @@ def test_receive_usd_from_same_twice(
         [0, 1, 2, 3, 4], constants.BATCH_SPECIAL_NFT_DATA, {"from": accounts[0]}
     )
     delta = int((end_time - start_time))
-    usd_contract.increaseAllowance(running_launch, 500e18, {"from": accounts[1]})
-    running_launch.sendUSD(500e18, {"from": accounts[1]})
+    stable_contract.increaseAllowance(running_launch, 500e18, {"from": accounts[1]})
+    running_launch.sendStable(500e18, {"from": accounts[1]})
     for inv in investors:
-        usd_contract.increaseAllowance(running_launch, 500e18, {"from": inv})
-        running_launch.sendUSD(500e18, {"from": inv})
+        stable_contract.increaseAllowance(running_launch, 500e18, {"from": inv})
+        running_launch.sendStable(500e18, {"from": inv})
     brownie.chain.sleep(delta)
     assert running_launch.fundsProvidedByAddress(accounts[1]) == 1000e18
     venture_bond_address = running_launch.launchVentureBondAddress(
@@ -146,10 +146,10 @@ def test_receive_usd_from_same_twice(
         )
 
 
-def test_receive_usd_during_offering(
-    running_launch, send_1000_usd_to_accounts, accounts
+def test_receive_stable_during_offering(
+    running_launch, send_1000_stable_to_accounts, accounts
 ):
-    usd_contract = send_1000_usd_to_accounts
+    stable_contract = send_1000_stable_to_accounts
 
     start_time = running_launch.launchStartTime({"from": accounts[1]})
     end_time = running_launch.launchEndTime({"from": accounts[1]})
@@ -161,10 +161,10 @@ def test_receive_usd_during_offering(
     delta = int((end_time - start_time) / number_of_investors)
 
     for i in range(number_of_investors):
-        usd_contract.increaseAllowance(
+        stable_contract.increaseAllowance(
             running_launch, 1000e18, {"from": accounts[i + 1]}
         )
-        tx = running_launch.sendUSD(1000e18, {"from": accounts[i + 1]})
+        tx = running_launch.sendStable(1000e18, {"from": accounts[i + 1]})
 
         assert "SupporterFundsDeposited" in tx.events
 
@@ -185,11 +185,11 @@ def test_receive_eth_reverts_in_factory(deployed_factory, accounts):
 
 
 def test_dev_can_tap_after_successful_launch(successful_launch, accounts):
-    launch_contract, usd_contract = successful_launch
-    initial_balance = usd_contract.balanceOf(accounts[0], {"from": accounts[0]})
+    launch_contract, stable_contract = successful_launch
+    initial_balance = stable_contract.balanceOf(accounts[0], {"from": accounts[0]})
 
     launch_contract.launcherTap({"from": accounts[0]})
-    new_balance = usd_contract.balanceOf(accounts[0], {"from": accounts[0]})
+    new_balance = stable_contract.balanceOf(accounts[0], {"from": accounts[0]})
 
     assert new_balance > initial_balance
 
@@ -201,15 +201,15 @@ def test_dev_cannot_tap_after_failed_launch(failed_launch, accounts):
         failed_launch.launcherTap({"from": accounts[0]})
 
 
-def test_cannot_send_usd_after_launch(successful_launch, accounts):
-    launch_contract, usd_contract = successful_launch
+def test_cannot_send_stable_after_launch(successful_launch, accounts):
+    launch_contract, stable_contract = successful_launch
     with brownie.reverts("Launch has ended"):
-        usd_contract.increaseAllowance(launch_contract, 1000, {"from": accounts[1]})
-        launch_contract.sendUSD(1000, {"from": accounts[1]})
+        stable_contract.increaseAllowance(launch_contract, 1000, {"from": accounts[1]})
+        launch_contract.sendStable(1000, {"from": accounts[1]})
 
 
 def test_investors_can_claim_after_unsuccessful_launch(
-    running_launch, accounts, send_1000_usd_to_accounts
+    running_launch, accounts, send_1000_stable_to_accounts
 ):
     investors = accounts[1:10]
     launch_contract = running_launch
@@ -218,20 +218,20 @@ def test_investors_can_claim_after_unsuccessful_launch(
     # Sleep until it finishes
     brownie.chain.sleep(int(start_delta) + 1)
     for account in investors:
-        send_1000_usd_to_accounts.increaseAllowance(
+        send_1000_stable_to_accounts.increaseAllowance(
             running_launch, constants.LOW_INPUT_AMOUNT, {"from": account}
         )
-        running_launch.sendUSD(constants.LOW_INPUT_AMOUNT, {"from": account})
+        running_launch.sendStable(constants.LOW_INPUT_AMOUNT, {"from": account})
 
     brownie.chain.sleep(int(constants.END_DATE - constants.START_DATE) + 1)
     for inv in investors:
         launch_contract.claim({"from": inv})
-        balance = send_1000_usd_to_accounts.balanceOf(inv)
+        balance = send_1000_stable_to_accounts.balanceOf(inv)
         assert balance == 1000e18
 
 
 def test_nft_not_minted_on_failed_launch(
-    running_launch, accounts, send_1000_usd_to_accounts
+    running_launch, accounts, send_1000_stable_to_accounts
 ):
     investors = accounts[1:10]
     launch_contract = running_launch
@@ -240,10 +240,10 @@ def test_nft_not_minted_on_failed_launch(
     # Sleep until it finishes
     brownie.chain.sleep(int(start_delta) + 1)
     for account in investors:
-        send_1000_usd_to_accounts.increaseAllowance(
+        send_1000_stable_to_accounts.increaseAllowance(
             running_launch, constants.LOW_INPUT_AMOUNT, {"from": account}
         )
-        running_launch.sendUSD(constants.LOW_INPUT_AMOUNT, {"from": account})
+        running_launch.sendStable(constants.LOW_INPUT_AMOUNT, {"from": account})
     venture_bond_address = launch_contract.launchVentureBondAddress(
         {"from": accounts[0]}
     )
@@ -259,7 +259,7 @@ def test_investors_claim_nft_after_successful_launch(
     successful_launch, accounts, deployed_factory
 ):
     investors = accounts[1:10]
-    launch_contract, usd_contract = successful_launch
+    launch_contract, stable_contract = successful_launch
     venture_bond_address = launch_contract.launchVentureBondAddress(
         {"from": accounts[0]}
     )
@@ -305,7 +305,7 @@ def test_investors_claim_nft_after_successful_launch(
 def test_fake_investor_fails_claims_nft_after_successful_launch(
     successful_launch, accounts
 ):
-    launch_contract, usd_contract = successful_launch
+    launch_contract, stable_contract = successful_launch
     with brownie.reverts("msg.sender not eligible"):
         launch_contract.claim({"from": accounts[0]})
 
@@ -313,7 +313,7 @@ def test_fake_investor_fails_claims_nft_after_successful_launch(
 def test_investors_tap_nft_after_claiming(successful_launch, accounts):
     tx = []
     investors = accounts[1:10]
-    launch_contract, usd_contract = successful_launch
+    launch_contract, stable_contract = successful_launch
     venture_bond_address = launch_contract.launchVentureBondAddress(
         {"from": accounts[0]}
     )
@@ -353,7 +353,7 @@ def test_investors_tap_nft_after_claiming(successful_launch, accounts):
 def test_investors_tap_nft_after_long_time(successful_launch, accounts):
     tx = []
     investors = accounts[1:10]
-    launch_contract, usd_contract = successful_launch
+    launch_contract, stable_contract = successful_launch
     venture_bond_address = launch_contract.launchVentureBondAddress(
         {"from": accounts[0]}
     )
@@ -397,7 +397,7 @@ def test_launcher_withdraw_unsold_tokens_fails(successful_launch, accounts):
 
 # this test scenario will use the same parameters but will have one less investor meaning there are left over tokens to withdraw
 def test_launcher_withdraw_unsold_tokens_succeeds(
-    running_launch, accounts, send_1000_usd_to_accounts
+    running_launch, accounts, send_1000_stable_to_accounts
 ):
     tx = []
     investors = accounts[1:9]
@@ -407,15 +407,15 @@ def test_launcher_withdraw_unsold_tokens_succeeds(
     brownie.chain.sleep(int(start_delta) + 1)
     
     for n, account in enumerate(investors):
-        send_1000_usd_to_accounts.increaseAllowance(
+        send_1000_stable_to_accounts.increaseAllowance(
             running_launch, 1000e18 + n * 100e18, {"from": account}
         )
-        running_launch.sendUSD(100e18 + n * 100e18, {"from": account})
+        running_launch.sendStable(100e18 + n * 100e18, {"from": account})
 
     brownie.chain.sleep(int(constants.END_DATE - constants.START_DATE) + 1)
 
     launch_contract = running_launch
-    usd_contract = send_1000_usd_to_accounts
+    stable_contract = send_1000_stable_to_accounts
     venture_bond_address = launch_contract.launchVentureBondAddress(
         {"from": accounts[0]}
     )
@@ -454,7 +454,7 @@ def test_launcher_withdraw_unsold_tokens_succeeds(
 
 
 def test_investors_tap_nft_after_failed_launch(
-    running_launch, accounts, send_1000_usd_to_accounts
+    running_launch, accounts, send_1000_stable_to_accounts
 ):
     investors = accounts[1:10]
     launch_contract = running_launch
@@ -462,10 +462,10 @@ def test_investors_tap_nft_after_failed_launch(
     launch_contract.batchAddToWhitelist(investors, {"from": accounts[0]})
     brownie.chain.sleep(int(start_delta) + 1)
     for account in investors:
-        send_1000_usd_to_accounts.increaseAllowance(
+        send_1000_stable_to_accounts.increaseAllowance(
             running_launch, constants.LOW_INPUT_AMOUNT, {"from": account}
         )
-        running_launch.sendUSD(constants.LOW_INPUT_AMOUNT, {"from": account})
+        running_launch.sendStable(constants.LOW_INPUT_AMOUNT, {"from": account})
     brownie.chain.sleep(int(constants.END_DATE - constants.START_DATE) + 1)
 
     with brownie.reverts("Launch Unsuccessful."):

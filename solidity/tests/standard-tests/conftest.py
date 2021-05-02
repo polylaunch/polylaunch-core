@@ -32,7 +32,7 @@ from brownie import (
 
 
 @pytest.fixture(scope="module", autouse=True)
-def deployed_factory(usd_contract, accounts):
+def deployed_factory(stable_contract, accounts):
     deployer = accounts.at("0xC3D6880fD95E06C817cB030fAc45b3fae3651Cb0", force=True)
     constants = PolylaunchConstants.deploy({"from": deployer})
     registry = PreLaunchRegistry.deploy({"from": deployer})
@@ -43,7 +43,7 @@ def deployed_factory(usd_contract, accounts):
     governor = GovernorAlpha.deploy({"from": deployer})
     launch = BasicLaunch.deploy({"from": deployer})
     system = PolylaunchSystem.deploy(
-        usd_contract.address,
+        stable_contract.address,
         launch.address,
         governor.address,
         {"from": deployer},
@@ -57,7 +57,7 @@ def deployed_factory(usd_contract, accounts):
 
 
 @pytest.fixture(scope="module", autouse=True)
-def usd_contract(BasicERC20, accounts):
+def stable_contract(BasicERC20, accounts):
     contract = BasicERC20.deploy("Dai Stablecoin", "DAI", {"from": accounts[0]})
     yield contract
 
@@ -84,21 +84,21 @@ def mint_dummy_token(GovernableERC20, accounts):
 
 
 @pytest.fixture(scope="function")
-def send_1000_usd_to_accounts(usd_contract, accounts):
+def send_1000_stable_to_accounts(stable_contract, accounts):
     for account in accounts:
-        usd_contract.mint(1000e18, {"from": account})
-    yield usd_contract
+        stable_contract.mint(1000e18, {"from": account})
+    yield stable_contract
 
 
 @pytest.fixture(scope="function")
-def send_any_usd_to_accounts(usd_contract, accounts):
+def send_any_stable_to_accounts(stable_contract, accounts):
     for account in accounts:
-        usd_contract.mint(constants.USD_AMOUNT, {"from": account})
-    yield usd_contract
+        stable_contract.mint(constants.stable_AMOUNT, {"from": account})
+    yield stable_contract
 
 
 @pytest.fixture(scope="function")
-def alt_launch_minted(accounts, deployed_factory, send_any_usd_to_accounts):
+def alt_launch_minted(accounts, deployed_factory, send_any_stable_to_accounts):
     alt_coin = GovernableERC20.deploy(
         accounts[0],
         accounts[0],
@@ -134,8 +134,8 @@ def alt_launch_minted(accounts, deployed_factory, send_any_usd_to_accounts):
     chain.sleep(int(start_delta) + 1)
     launch.batchAddToWhitelist(investors, {"from": accounts[0]})
     for account in investors:
-        send_any_usd_to_accounts.increaseAllowance(launch, 1000e18, {"from": account})
-        launch.sendUSD(1000e18, {"from": account})
+        send_any_stable_to_accounts.increaseAllowance(launch, 1000e18, {"from": account})
+        launch.sendStable(1000e18, {"from": account})
 
     chain.sleep(int(constants.END_DATE - constants.START_DATE) + 1)
 
@@ -144,7 +144,7 @@ def alt_launch_minted(accounts, deployed_factory, send_any_usd_to_accounts):
     for inv in investors:
         launch.claim({"from": inv})
 
-    yield launch, send_any_usd_to_accounts, nft
+    yield launch, send_any_stable_to_accounts, nft
 
 
 @pytest.fixture(scope="function")
@@ -173,7 +173,7 @@ def running_launch(mint_dummy_token, accounts, deployed_factory):
 
 
 @pytest.fixture(scope="function")
-def successful_launch(running_launch, send_1000_usd_to_accounts, accounts):
+def successful_launch(running_launch, send_1000_stable_to_accounts, accounts):
     investor_accounts = accounts[1:10]
 
     # wait for it to start
@@ -181,13 +181,13 @@ def successful_launch(running_launch, send_1000_usd_to_accounts, accounts):
     chain.sleep(int(start_delta) + 1)
     running_launch.batchAddToWhitelist(investor_accounts, {"from": accounts[0]})
     for account in investor_accounts:
-        send_1000_usd_to_accounts.increaseAllowance(
+        send_1000_stable_to_accounts.increaseAllowance(
             running_launch, 1000e18, {"from": account}
         )
-        running_launch.sendUSD(1000e18, {"from": account})
+        running_launch.sendStable(1000e18, {"from": account})
 
     chain.sleep(int(constants.END_DATE - constants.START_DATE) + 1)
-    yield running_launch, send_1000_usd_to_accounts
+    yield running_launch, send_1000_stable_to_accounts
 
 
 @pytest.fixture(scope="function")
@@ -204,7 +204,7 @@ def failed_launch(running_launch, accounts):
 @pytest.fixture(scope="function")
 def minted_launch(successful_launch, accounts):
     investors = accounts[1:10]
-    launch_contract, usd_contract = successful_launch
+    launch_contract, stable_contract = successful_launch
     venture_bond_address = launch_contract.launchVentureBondAddress(
         {"from": accounts[0]}
     )
@@ -216,18 +216,18 @@ def minted_launch(successful_launch, accounts):
 
 
 @pytest.fixture(scope="function")
-def minted_launch_with_bid(minted_launch, accounts, send_any_usd_to_accounts):
+def minted_launch_with_bid(minted_launch, accounts, send_any_stable_to_accounts):
     launch_contract, venture_bond_contract = minted_launch
     market_contract = Market.at(
         launch_contract.launchMarketAddress({"from": accounts[0]})
     )
     bidder = accounts[2]
-    send_any_usd_to_accounts.increaseAllowance(
+    send_any_stable_to_accounts.increaseAllowance(
         market_contract, constants.BID_PRICE, {"from": bidder}
     )
     venture_bond_contract.setBid(
         0,
-        [constants.BID_PRICE, send_any_usd_to_accounts.address, bidder, bidder, [0]],
+        [constants.BID_PRICE, send_any_stable_to_accounts.address, bidder, bidder, [0]],
         {"from": bidder},
     )
 

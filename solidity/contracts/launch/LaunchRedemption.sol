@@ -45,7 +45,7 @@ library LaunchRedemption {
             IPolyVault(address(this))._launcherYieldTap(
                 vaultRegistry,
                 self.launcherTapRate,
-                self.USD,
+                self.stable,
                 self.fundRecipient,
                 self.polylaunchSystem
             );
@@ -54,7 +54,7 @@ library LaunchRedemption {
             uint256 withdrawable = LaunchUtils.getLauncherWithdrawableFunds(self);
             require(withdrawable > 0, "There are no funds to withdraw");
             self.lastWithdrawn = block.timestamp;
-            self.USD.safeTransfer(self.fundRecipient, withdrawable);
+            self.stable.safeTransfer(self.fundRecipient, withdrawable);
 
             LaunchLogger(self.polylaunchSystem).logLauncherFundsTapped(
                 address(this),
@@ -192,7 +192,7 @@ library LaunchRedemption {
         } else {
             uint256 userProvided = self.provided[msg.sender];
             self.provided[msg.sender] = 0;
-            self.USD.safeTransfer(msg.sender, userProvided);
+            self.stable.safeTransfer(msg.sender, userProvided);
             LaunchLogger(self.polylaunchSystem).logFundsWithdrawn(
                 address(this),
                 msg.sender,

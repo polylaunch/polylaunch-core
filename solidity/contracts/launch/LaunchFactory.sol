@@ -37,7 +37,7 @@ contract LaunchFactory is
     // address of the Vault registry contract
     address private vaultRegistryAddress;
     // IERC20 interface for DAI
-    IERC20 public usdAddress;
+    IERC20 public stableAddress;
     // tracker for the number of launches
     Counters.Counter public launchIdTracker;
     //   address public baseDutchAuctionAddress; future (example)
@@ -105,10 +105,10 @@ contract LaunchFactory is
 
     /**
      * @notice sets the DAI contract to be passed into launches
-     * @param _usdAddress IERC20 contract to be used as the DAI address
+     * @param _stableAddress IERC20 contract to be used as the DAI address
      */
-    function setUsdContract(IERC20 _usdAddress) public onlySystem {
-        usdAddress = _usdAddress;
+    function setStableContract(IERC20 _stableAddress) public onlySystem {
+        stableAddress = _stableAddress;
     }
 
     function setVaultRegistryAddress(address _vaultRegistryAddress)
@@ -196,7 +196,7 @@ contract LaunchFactory is
         uint256 launchId
     ) internal {
         basicLaunch.init(
-            usdAddress,
+            stableAddress,
             launchInfo,
             ventureBondAddress,
             marketAddress,

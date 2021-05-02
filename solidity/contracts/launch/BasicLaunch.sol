@@ -102,7 +102,7 @@ contract BasicLaunch is PolyVault, ReentrancyGuard {
      * @dev can only be called once
      */
     function init(
-        IERC20 _usd,
+        IERC20 _stable,
         ILaunchFactory.LaunchInfo memory launchInfo,
         address _ventureBondContract,
         address _marketContract,
@@ -125,7 +125,7 @@ contract BasicLaunch is PolyVault, ReentrancyGuard {
 
         self.launchId = _launchId;
         self.polylaunchSystem = _system;
-        self.USD = _usd;
+        self.stable = _stable;
         self.TOKEN = launchInfo._token;
         self.TOTAL_TOKENS_FOR_SALE = launchInfo._totalForSale;
         self.START = launchInfo._startDate;
@@ -162,7 +162,7 @@ contract BasicLaunch is PolyVault, ReentrancyGuard {
      * @notice Allows an address to send in DAI to invest in the DAICO
      * @param amount the amount the address would like to invest
      */
-    function sendUSD(uint256 amount) external {
+    function sendStable(uint256 amount) external {
         require(block.timestamp >= self.START, "Launch not started");
         require(block.timestamp < self.END, "Launch has ended");
         require(register.isWhiteListed[msg.sender], "msg.sender not whitelisted");
@@ -176,7 +176,7 @@ contract BasicLaunch is PolyVault, ReentrancyGuard {
             "You have reached the individual funding cap"
         );
         require(
-            self.USD.transferFrom(msg.sender, address(this), amount),
+            self.stable.transferFrom(msg.sender, address(this), amount),
             "Token transfer failed"
         );
         if (self.provided[msg.sender] == 0) {
@@ -455,14 +455,14 @@ contract BasicLaunch is PolyVault, ReentrancyGuard {
     }
 
     /**
-     * @notice Puts the launch into refund mode, which allows contributors to claim back their USD proportional to their token balance
+     * @notice Puts the launch into refund mode, which allows contributors to claim back their stable proportional to their token balance
      */
     function initiateRefundMode() public onlyGovernor {
         self.initiateRefundMode();
     }
 
     /**
-     * @notice Allows venture bond owners to claim a USD refund if the launch is in refund mode.
+     * @notice Allows venture bond owners to claim a stable refund if the launch is in refund mode.
      * @param tokenId id of the venture bond to claim the refund against
      */
     function claimRefund(uint256 tokenId) external nonReentrant returns (uint256) {

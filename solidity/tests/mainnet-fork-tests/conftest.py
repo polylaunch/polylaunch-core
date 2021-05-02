@@ -186,7 +186,7 @@ def successful_launch(running_launch, send_10_eth_of_dai_to_accounts, accounts):
         send_10_eth_of_dai_to_accounts.approve(
             running_launch, 1000e18, {"from": account}
         )
-        running_launch.sendUSD(1000e18, {"from": account})
+        running_launch.sendStable(1000e18, {"from": account})
 
     chain.sleep(int(constants.END_DATE - constants.START_DATE) + 1)
     yield running_launch, send_10_eth_of_dai_to_accounts
@@ -194,21 +194,21 @@ def successful_launch(running_launch, send_10_eth_of_dai_to_accounts, accounts):
 
 @pytest.fixture(scope="function")
 def success_launch_comp(successful_launch, send_10_eth_of_dai_to_accounts, accounts):
-    launch_contract, usd_contract = successful_launch
+    launch_contract, stable_contract = successful_launch
     launch_contract.deposit(1, {"from": accounts[0]})
     yield launch_contract
 
 
 @pytest.fixture(scope="function")
 def success_launch_yearn(successful_launch, send_10_eth_of_dai_to_accounts, accounts):
-    launch_contract, usd_contract = successful_launch
+    launch_contract, stable_contract = successful_launch
     launch_contract.deposit(2, {"from": accounts[0]})
     yield launch_contract
 
 
 @pytest.fixture(scope="function")
 def success_launch_aave(successful_launch, send_10_eth_of_dai_to_accounts, accounts):
-    launch_contract, usd_contract = successful_launch
+    launch_contract, stable_contract = successful_launch
     launch_contract.deposit(3, {"from": accounts[0]})
     yield launch_contract
 

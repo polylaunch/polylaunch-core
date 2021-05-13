@@ -13,10 +13,10 @@ def test_alt_launch(minted_launch, alt_launch_minted, accounts):
     assert nft.ownerOf(nft_alt_id) == accounts[1]
     assert nft.launchAddressAssociatedWithToken(nft_main_id) == launch.address
     assert nft.launchAddressAssociatedWithToken(nft_alt_id) == alt_launch.address
-    with brownie.reverts("supporterTap: ventureBond not associated with this launch"):
+    with brownie.reverts("!associatedWithLaunch"):
         launch.supporterTap(nft_alt_id, {"from": accounts[1]})
         alt_launch.supporterTap(nft_main_id, {"from": accounts[1]})
-    with brownie.reverts("Not your ventureBond"):
+    with brownie.reverts("!owner"):
         launch.supporterTap(nft_main_id, {"from": accounts[2]})
         alt_launch.supporterTap(nft_alt_id, {"from": accounts[2]})
     assert launch.supporterTap(nft_main_id, {"from": accounts[1]})
@@ -196,7 +196,7 @@ def test_dev_can_tap_after_successful_launch(successful_launch, accounts):
 
 def test_dev_cannot_tap_after_failed_launch(failed_launch, accounts):
     with brownie.reverts(
-        "The minimum amount was not raised or the launch has not finished"
+        "min amount not raised or launch unfinished"
     ):
         failed_launch.launcherTap({"from": accounts[0]})
 

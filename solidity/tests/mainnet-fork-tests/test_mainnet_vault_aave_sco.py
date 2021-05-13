@@ -7,7 +7,7 @@ import constants_mainnet as constants
 # this test represents a start to end scenario it shows that there will be funds left over at the end of the tap that
 # must be exited. Once the dev exits they can access the generated funds by calling exitFromVault and then tapping
 # these funds as normal. (adai value depends on the time you want to spend mining)
-def test_deposit_to_all_funds_withdrawn(successful_launch, accounts, adai, deployed_factory):
+def test_deposit_to_all_funds_withdrawn(successful_launch, accounts, adai, deployed_factory, aave, stkAave):
     launch_contract, stable_contract = successful_launch
     initial_dai_balance = stable_contract.balanceOf(launch_contract.address)
     launch_contract.deposit(3, {"from": accounts[0]})
@@ -34,14 +34,15 @@ def test_deposit_to_all_funds_withdrawn(successful_launch, accounts, adai, deplo
     tx = launch_contract.launcherTap({"from": accounts[0]})
     assert "LauncherFundsTapped" in tx.events
     assert stable_contract.balanceOf(launch_contract.address) == 0
-    with brownie.reverts("There are no funds to withdraw"):
+    with brownie.reverts("No funds to withdraw"):
         launch_contract.launcherTap({"from": accounts[0]})
     init_sys_owner_balance = stable_contract.balanceOf(accounts[0])
     deployed_factory[1].withdraw([stable_contract], accounts[0], {"from": accounts.at("0xC3D6880fD95E06C817cB030fAc45b3fae3651Cb0", force=True)})
     after_sys_owner_balance = stable_contract.balanceOf(accounts[0])
     assert init_sys_owner_balance < after_sys_owner_balance
     assert stable_contract.balanceOf(deployed_factory[1]) == 0
-
+    tra = launch_contract.withdrawAave(["0x028171bCA77440897B824Ca71D1c56caC55b68A3"],{"from": accounts[0]})
+    assert stkAave.balanceOf(launch_contract) > 0
 
 '''
 Deposit scenarios
@@ -72,16 +73,16 @@ def test_deposit_aave_not_launcher(successful_launch, accounts):
 
 def test_deposit_no_vault_id_reverts(successful_launch, accounts):
     launch_contract, _ = successful_launch
-    with brownie.reverts("Vault: The selected vaultId is inactive"):
+    with brownie.reverts("vaultId invalid"):
         launch_contract.deposit(99, {"from": accounts[0]})
 
 
 def test_double_deposit_reverts(successful_launch, accounts):
     launch_contract, _ = successful_launch
     launch_contract.deposit(3, {"from": accounts[0]})
-    with brownie.reverts("LaunchVault: Your funds are already in a vault pool"):
+    with brownie.reverts("funds already deployed"):
         launch_contract.deposit(3, {"from": accounts[0]})
-    with brownie.reverts("LaunchVault: Your funds are already in a vault pool"):
+    with brownie.reverts("funds already deployed"):
         launch_contract.deposit(2, {"from": accounts[0]})
 
 
@@ -89,7 +90,7 @@ def test_deposit_empty_funds_reverts(successful_launch, accounts, adai):
     launch_contract, stable_contract = successful_launch
     brownie.chain.sleep(10000000000)
     launch_contract.launcherTap({"from": accounts[0]})
-    with brownie.reverts("LaunchVault: No funds to deposit into the Vault"):
+    with brownie.reverts("no depositable funds"):
         launch_contract.deposit(3, {"from": accounts[0]})
 
 
@@ -158,7 +159,7 @@ def test_double_exit_attempt(successful_launch, accounts, deployed_factory):
     launch_contract.deposit(3, {"from": accounts[0]})
     brownie.chain.sleep(1000)
     launch_contract.exitFromVault({"from": accounts[0]})
-    with brownie.reverts("LaunchVault: Yield has not been activated"):
+    with brownie.reverts("yield not activated"):
         launch_contract.exitFromVault({"from": accounts[0]})
     assert stable_contract.balanceOf(deployed_factory[1]) > 0
 

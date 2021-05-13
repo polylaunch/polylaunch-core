@@ -62,6 +62,11 @@ def cdai():
 
 
 @pytest.fixture(scope="module")
+def comp():
+    yield Contract.from_explorer("0xc00e94cb662c3520282e6f5717214004a7f26888")
+
+
+@pytest.fixture(scope="module")
 def ydai():
     yield Contract.from_explorer("0x19D3364A399d251E894aC732651be8B0E4e85001")
 
@@ -69,6 +74,17 @@ def ydai():
 @pytest.fixture(scope="module")
 def adai():
     yield Contract.from_explorer("0x028171bCA77440897B824Ca71D1c56caC55b68A3")
+
+
+@pytest.fixture(scope="module")
+def aave():
+    yield Contract.from_explorer("0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9")
+
+ 
+ 
+@pytest.fixture(scope="module")
+def stkAave():
+    yield Contract.from_explorer("0xd784927Ff2f95ba542BfC824c8a8a98F3495f6b5")   
 
 
 @pytest.fixture(scope="module", autouse=True)

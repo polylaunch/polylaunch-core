@@ -56,7 +56,7 @@ library LaunchGovernance {
 
         require(
             IVentureBond(self.ventureBondAddress).launchAddressAssociatedWithToken(tokenId) == address(this),
-            "claimRefund: ventureBond not associated with this launch"
+            "claimRefund: ventureBond not associated"
         );
         uint256 walletBalance = self.TOKEN.balanceOf(msg.sender);
         uint256 totalSenderBalance =

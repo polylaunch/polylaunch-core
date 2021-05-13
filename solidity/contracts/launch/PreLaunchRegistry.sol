@@ -65,7 +65,7 @@ library PreLaunchRegistry {
     ) internal onlyValidNftData(_nftData) {
         require(
             !self.isIndexMinted[i],
-            "VentureBondDataRegistry: This token has already been minted, its data cannot be changed"
+            "index already minted"
         );
         self.nftData[i] = _nftData;
 
@@ -87,7 +87,7 @@ library PreLaunchRegistry {
     ) internal {
         require(
             i_s.length == _nftData.length,
-            "VentureBondDataRegistry: Arrays must be the same length"
+            "array lengths not matching"
         );
         for (uint256 i = 0; i < i_s.length; i++) {
             setNftDataByIndex(self, i_s[i], _nftData[i]);

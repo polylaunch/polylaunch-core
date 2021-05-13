@@ -13,3 +13,7 @@ interface ICErc20 {
     function balanceOfUnderlying(address) external view returns (uint256);
 
 }
+
+interface ICompTroller {
+    function claimComp(address) external returns (uint256);
+}

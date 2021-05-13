@@ -86,9 +86,9 @@ contract BasicLaunch is PolyVault, ReentrancyGuard {
         address _governor
     ) public {
         require(!ownershipSet, "Already initiated");
-        require(_factory != address(0), "Factory cannot be zero address.");
-        require(_launcher != address(0), "Launcher cannot be zero address.");
-        require(_governor != address(0), "Governor cannot be zero address.");
+        require(_factory != address(0), "!zeroAddress");
+        require(_launcher != address(0), "!zeroAddress");
+        require(_governor != address(0), "!zeroAddress");
 
         self.launchFactory = _factory;
         self.launcher = _launcher;
@@ -109,7 +109,7 @@ contract BasicLaunch is PolyVault, ReentrancyGuard {
         address _system,
         uint256 _launchId
     ) public onlyFactory {
-        require(!self.initialised, "Contract already initialised");
+        require(!self.initialised, "Already initiated");
         require(
             launchInfo._startDate > block.timestamp,
             "Start date cannot be in the past"
@@ -246,6 +246,20 @@ contract BasicLaunch is PolyVault, ReentrancyGuard {
      */
     function exitFromVault() external onlyLauncher {
         self.exitFromVault();
+    }
+
+    /**
+     * @notice claim COMP rewards for compound polyvault
+     */
+    function withdrawComp() external onlyLauncher {
+        self.withdrawComp();
+    }
+
+    /**
+     * @notice claim AAVE rewards for compound polyvault
+     */
+    function withdrawAave(address[] calldata _asset) external onlyLauncher {
+        self.withdrawAave(_asset);
     }
 
     /**

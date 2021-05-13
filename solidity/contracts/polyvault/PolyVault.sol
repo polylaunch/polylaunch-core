@@ -67,7 +67,7 @@ contract PolyVault{
             vaultRegistry.getRegisteredVault(_vaultId);
         require(
             selectedVault.vaultActive,
-            "Vault: The selected vaultId is inactive"
+            "vaultId invalid"
         );
         uint256 _vaultProvider = selectedVault.vaultProvider;
         if (_vaultProvider == 1) {
@@ -102,7 +102,7 @@ contract PolyVault{
         IERC20 _stable,
         address _system
     ) external onlySelf {
-        require(activated, "PolyVault: Your funds are not currently staked");
+        require(activated, "PolyVault: funds not staked");
         IPolyVaultRegistry.Vault memory selectedVault =
             IPolyVaultRegistry(_vaultRegistry).getRegisteredVault(selectedVaultId);
 
@@ -113,8 +113,6 @@ contract PolyVault{
             compoundContract.redeem(compoundBalance);
         }
         if (selectedVault.vaultProvider == 2) {
-            uint256 sharePrice =
-                IVault(selectedVault.vaultContractAddress).pricePerShare();
             uint256 redeemResult =
                 IVault(selectedVault.vaultContractAddress).withdraw();
         }
@@ -178,7 +176,7 @@ contract PolyVault{
     ) internal {
         require(
             !activated,
-            "PolyVault: Your funds are already in a Compound pool"
+            "PolyVault: funds in compound"
         );
         // Approve transfer on the ERC20 contract
         _stable.approve(_vault.vaultContractAddress, _stableBalance);
@@ -204,7 +202,7 @@ contract PolyVault{
         address _fundRecipient,
         address _system
     ) internal {
-        require(activated, "PolyVault: Yield has not been activated");
+        require(activated, "PolyVault: Yield not activated");
         uint256 withdrawable =
             _stableTapRate.mul(block.timestamp.sub(lastWithdrawn));
         if (remainingBalance < withdrawable) {
@@ -223,7 +221,7 @@ contract PolyVault{
             withdrawable
         );
     }
-
+    
     ///
     /// YEARN V2 FUNCTIONS
     ///
@@ -242,7 +240,7 @@ contract PolyVault{
     ) internal {
         require(
             !activated,
-            "PolyVault: Your funds are already in a Yearn vault"
+            "PolyVault: funds in yearn"
         );
         // Approve transfer on the ERC20 contract
         _stable.approve(_vault.vaultContractAddress, _stableBalance);
@@ -266,7 +264,7 @@ contract PolyVault{
         address _fundRecipient,
         address _system
     ) internal {
-        require(activated, "PolyVault: Yield has not been activated");
+        require(activated, "PolyVault: Yield not activated");
         uint256 withdrawable =
             _stableTapRate.mul(block.timestamp.sub(lastWithdrawn));
         if (remainingBalance < withdrawable) {
@@ -305,7 +303,7 @@ contract PolyVault{
     ) internal {
         require(
             !activated,
-            "PolyVault: Your funds are already in an Aave pool"
+            "PolyVault: funds in aave"
         );
         // Approve transfer on the ERC20 contract
         _stable.approve(_vault.vaultContractAddress, _stableBalance);
@@ -329,7 +327,7 @@ contract PolyVault{
         address _fundRecipient,
         address _system
     ) internal {
-        require(activated, "PolyVault: Yield has not been activated");
+        require(activated, "PolyVault: Yield not activated");
         uint256 withdrawable =
             _stableTapRate.mul(block.timestamp.sub(lastWithdrawn));
         if (remainingBalance < withdrawable) {

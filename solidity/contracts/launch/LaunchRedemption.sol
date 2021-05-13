@@ -37,7 +37,7 @@ library LaunchRedemption {
         }
         require(
             self.launchSuccessful,
-            "The minimum amount was not raised or the launch has not finished"
+            "min amount not raised or launch unfinished"
         );
         if (self.yieldActivated) {
             address vaultRegistry =
@@ -52,7 +52,7 @@ library LaunchRedemption {
             self.lastWithdrawn = block.timestamp;
         } else {
             uint256 withdrawable = LaunchUtils.getLauncherWithdrawableFunds(self);
-            require(withdrawable > 0, "There are no funds to withdraw");
+            require(withdrawable > 0, "No funds to withdraw");
             self.lastWithdrawn = block.timestamp;
             self.stable.safeTransfer(self.fundRecipient, withdrawable);
 
@@ -78,12 +78,12 @@ library LaunchRedemption {
         require(self.launchSuccessful, "Launch Unsuccessful.");
         require(
             IERC721(self.ventureBondAddress).ownerOf(tokenId) == msg.sender,
-            "Not your ventureBond"
+            "!owner"
         );
 
         require(
             IVentureBond(self.ventureBondAddress).launchAddressAssociatedWithToken(tokenId) == address(this),
-            "supporterTap: ventureBond not associated with this launch"
+            "!associatedWithLaunch"
         );
 
         uint256 withdrawable =

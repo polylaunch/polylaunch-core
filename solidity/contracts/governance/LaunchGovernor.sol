@@ -216,8 +216,6 @@ contract GovernorAlpha {
         }
 
         uint256 startTime = add256(block.timestamp, votingDelay());
-        // start block is before the start time, since its just used for recordkeeping
-        uint256 startBlock = block.number;
         uint256 endTime = add256(startTime, votingPeriod());
 
         proposalCount++;
@@ -228,7 +226,6 @@ contract GovernorAlpha {
         p.eta = 0;
         p.newRate = newRate;
         p.startTime = startTime;
-        p.startBlock = startBlock;
         p.endTime = endTime;
         p.forVotes = 0;
         p.againstVotes = 0;
@@ -267,8 +264,6 @@ contract GovernorAlpha {
         }
 
         uint256 startTime = add256(block.timestamp, votingDelay());
-        // start block is before the start time, since its just used for recordkeeping
-        uint256 startBlock = block.number;
         uint256 endTime = add256(startTime, votingPeriod());
 
         proposalCount++;
@@ -279,7 +274,6 @@ contract GovernorAlpha {
         p.eta = 0;
         p.newRate = 0;
         p.startTime = startTime;
-        p.startBlock = startBlock;
         p.endTime = endTime;
         p.forVotes = 0;
         p.againstVotes = 0;
@@ -412,6 +406,10 @@ contract GovernorAlpha {
         );
         Proposal storage proposal = proposals[proposalId];
         Receipt storage receipt = proposal.receipts[voter];
+        if (proposal.startBlock == 0){
+            // start block is -1 of current so the first vote caster isnt reverted
+            proposal.startBlock = block.number - 1;
+        }
         require(
             receipt.hasVoted == false,
             "LaunchGovernor::_castVote: voter already voted"

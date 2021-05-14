@@ -223,7 +223,7 @@ def launch_with_succeeded_proposal(launch_with_active_tap_increase_proposal, acc
     for token_id, inv in enumerate(investors):
         governor.castVote(token_id, proposal_id, True, {"from": inv})
 
-    chain.mine(20)  # Mine enough blocks to complete launch
+    chain.sleep(86400)  # Mine enough blocks to complete launch
     yield proposal_id, launch, governor
 
 
@@ -274,5 +274,5 @@ def launch_with_active_tap_increase_proposal(
         {"from": accounts[0]},
     )
 
-    chain.mine(2)
+    chain.sleep(61)
     yield tx.return_value, launch, governor

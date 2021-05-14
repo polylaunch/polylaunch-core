@@ -36,7 +36,7 @@ def launch_with_active_tap_increase_proposal(request, successful_launch, account
             {"from": accounts[1]},
         )
 
-    brownie.chain.mine(2)
+    brownie.chain.sleep(61)
     yield tx.return_value, launch, governor
 
 
@@ -70,7 +70,7 @@ def launch_with_succeeded_proposal(launch_with_active_tap_increase_proposal, acc
     for token_id, inv in enumerate(investors):
         governor.castVote(token_id, proposal_id, True, {"from": inv})
 
-    brownie.chain.mine(20)  # Mine enough blocks to complete launch
+    brownie.chain.sleep(86400)  # Mine enough blocks to complete launch
     yield proposal_id, launch, governor
 
 
@@ -78,7 +78,7 @@ def launch_with_succeeded_proposal(launch_with_active_tap_increase_proposal, acc
 def launch_with_defeated_proposal(launch_with_active_tap_increase_proposal, accounts):
     proposal_id, launch, governor = launch_with_active_tap_increase_proposal
 
-    brownie.chain.mine(20)  # Mine enough blocks to complete launch
+    brownie.chain.sleep(86400)  # Mine enough blocks to complete launch
     yield proposal_id, launch, governor
 
 

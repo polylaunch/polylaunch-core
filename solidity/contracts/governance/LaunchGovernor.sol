@@ -16,14 +16,14 @@ contract GovernorAlpha {
     /// @notice The delay before voting on a proposal may take place, once proposed
     function votingDelay() public pure returns (uint256) {
         return PolylaunchConstants.getVotingDelay();
-    } // 1 block
+    } // time
 
     /// @notice The delay before a proposal may be executed after it has been queued
     function executionDelay() public pure returns (uint256) {
         return PolylaunchConstants.getExecutionDelay();
     } // 2 days
 
-    /// @notice The duration of voting on a proposal, in blocks
+    /// @notice The duration of voting on a proposal, in time
     function votingPeriod() public pure returns (uint256) {
         return PolylaunchConstants.getVotingPeriod();
     } // ~7 days in blocks (assuming 15s blocks)
@@ -58,9 +58,11 @@ contract GovernorAlpha {
         // The new tap rate being proposed
         uint256 newRate;
         // the ordered list of target addresses for calls to be made
+        uint256 startTime;
+        // start block is before the start time, since its just used for recordkeeping
         uint256 startBlock;
         // The block at which voting ends: votes must be cast prior to this block
-        uint256 endBlock;
+        uint256 endTime;
         // Current number of votes in favor of this proposal
         uint256 forVotes;
         // Current number of votes in opposition to this proposal
@@ -114,8 +116,8 @@ contract GovernorAlpha {
     event TapIncreaseProposalCreated(
         uint256 id,
         address proposer,
-        uint256 startBlock,
-        uint256 endBlock,
+        uint256 startTime,
+        uint256 endTime,
         string description,
         uint256 newRate
     );
@@ -124,8 +126,8 @@ contract GovernorAlpha {
     event RefundProposalCreated(
         uint256 id,
         address proposer,
-        uint256 startBlock,
-        uint256 endBlock,
+        uint256 startTime,
+        uint256 endTime,
         string description
     );
 
@@ -213,8 +215,8 @@ contract GovernorAlpha {
             );
         }
 
-        uint256 startBlock = add256(block.number, votingDelay());
-        uint256 endBlock = add256(startBlock, votingPeriod());
+        uint256 startTime = add256(block.timestamp, votingDelay());
+        uint256 endTime = add256(startTime, votingPeriod());
 
         proposalCount++;
         Proposal storage p = proposals[proposalCount];
@@ -223,8 +225,8 @@ contract GovernorAlpha {
         p.proposer = msg.sender;
         p.eta = 0;
         p.newRate = newRate;
-        p.startBlock = startBlock;
-        p.endBlock = endBlock;
+        p.startTime = startTime;
+        p.endTime = endTime;
         p.forVotes = 0;
         p.againstVotes = 0;
         p.canceled = false;
@@ -235,8 +237,8 @@ contract GovernorAlpha {
         emit TapIncreaseProposalCreated(
             p.id,
             msg.sender,
-            startBlock,
-            endBlock,
+            startTime,
+            endTime,
             description,
             newRate
         );
@@ -261,8 +263,8 @@ contract GovernorAlpha {
             );
         }
 
-        uint256 startBlock = add256(block.number, votingDelay());
-        uint256 endBlock = add256(startBlock, votingPeriod());
+        uint256 startTime = add256(block.timestamp, votingDelay());
+        uint256 endTime = add256(startTime, votingPeriod());
 
         proposalCount++;
         Proposal storage p = proposals[proposalCount];
@@ -271,8 +273,8 @@ contract GovernorAlpha {
         p.proposer = msg.sender;
         p.eta = 0;
         p.newRate = 0;
-        p.startBlock = startBlock;
-        p.endBlock = endBlock;
+        p.startTime = startTime;
+        p.endTime = endTime;
         p.forVotes = 0;
         p.againstVotes = 0;
         p.canceled = false;
@@ -283,8 +285,8 @@ contract GovernorAlpha {
         emit RefundProposalCreated(
             p.id,
             msg.sender,
-            startBlock,
-            endBlock,
+            startTime,
+            endTime,
             description
         );
         return p.id;
@@ -367,9 +369,9 @@ contract GovernorAlpha {
         );
         if (proposal.canceled) {
             return ProposalState.Canceled;
-        } else if (block.number <= proposal.startBlock) {
+        } else if (block.timestamp <= proposal.startTime) {
             return ProposalState.Pending;
-        } else if (block.number <= proposal.endBlock) {
+        } else if (block.timestamp <= proposal.endTime) {
             return ProposalState.Active;
         } else if (!quorumReached(proposal)) {
             return ProposalState.Defeated;
@@ -404,6 +406,10 @@ contract GovernorAlpha {
         );
         Proposal storage proposal = proposals[proposalId];
         Receipt storage receipt = proposal.receipts[voter];
+        if (proposal.startBlock == 0){
+            // start block is -1 of current so the first vote caster isnt reverted
+            proposal.startBlock = block.number - 1;
+        }
         require(
             receipt.hasVoted == false,
             "LaunchGovernor::_castVote: voter already voted"

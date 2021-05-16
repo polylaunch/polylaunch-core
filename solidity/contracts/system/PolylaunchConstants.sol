@@ -8,8 +8,8 @@ pragma solidity ^0.7.4;
 ///         on mainnet or mainnet-like ("staging") environments.
 library PolylaunchConstants {
     // Voting Parameters
-    uint256 public constant VOTING_DELAY = 1; // 1 block
-    uint256 public constant VOTING_PERIOD = 15; // 5 blocks
+    uint256 public constant VOTING_DELAY = 1 minutes; // 1 block
+    uint256 public constant VOTING_PERIOD = 1 days; // 5 blocks
 
     // Timelock parameters
     uint256 public constant EXECUTION_DELAY = 1 days; // 5 blocks

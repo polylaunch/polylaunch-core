@@ -22,8 +22,6 @@ contract PolyVaultRegistry is PolylaunchSystemAuthority, IPolyVaultRegistry {
     /// Struct reference
     ///
 
-    //    // vaultProvider 1 is compound
-    //    // vaultProvider 2 is yearn vaults
     //    struct Vault {
     //        uint256 vaultId;
     //        address vaultContractAddress;

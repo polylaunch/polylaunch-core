@@ -107,17 +107,3 @@ def main():
     vault_registry = PolyVaultRegistry.at(
         system.tx.events["PolylaunchSystemLaunched"]["vaultRegistry"]
     )
-    # register vaults
-    system.registerNewVault(
-        vault_registry.address, cdai.address, "COMPOUND_DAI", 1, {"from": deployer}
-    )
-    system.registerNewVault(
-        vault_registry.address, ydai.address, "YEARN_VAULTS_DAI", 2, {"from": deployer}
-    )
-    system.registerNewVault(
-        vault_registry.address,
-        AAVE_LENDING_POOL,
-        "AAVE_LENDING_DAI",
-        3,
-        {"from": deployer},
-    )
